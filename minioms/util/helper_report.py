@@ -269,19 +269,26 @@ def load_report_for_book(*,db_folder,strategy,market):
 	return df0
 
 def format_report_1(df0):
+	# --
+	# --
+	# --
+	pd.set_option('future.no_silent_downcasting', True)
+	# --
+	# --
+	# --
 	symbol_columns = filter(lambda cc: cc[0].isupper(), df0.columns)
 	float_columns = [ 'principle', 'dividend', 'txn balance', 'cash value', 'market value', 'total value', 'bmk mkt val', '$ alpha' ]
 	int_columns = [ 'maxpos', '#position', '#empty slot' ]
 	df1 = df0.transpose()
 	for scol in df1.columns:
 		if(scol[0].isupper() or scol in float_columns):
+			df1[scol] = df1[scol].fillna(0)
 			df1[scol] = df1[scol].astype(np.float64).round(2)
-			df1[scol].fillna(0,inplace=True)		
 		elif(scol in int_columns):
-			df1[scol].fillna(0,inplace=True)
+			df1[scol] = df1[scol].fillna(0)
 			df1[scol] = df1[scol].astype(np.int64)
 		else:
-			df1[scol].fillna("--",inplace=True)
+			df1[scol] = df1[scol].fillna('--')
 	return df1
 
 def create_report_for_strategy(*,db_folder,strategy,formatter=None,single_df=False):
@@ -404,9 +411,12 @@ def compare_account_portfs_holding(*,db_folder,account):
 	# !!
 	# !! can only do this after other_holding is expanded to account_holding dimension !!
 	# !!
-	account_holding['account_holding'].fillna(0,inplace=True)
-	account_holding['portfs_holding'].fillna(0,inplace=True)
-	account_holding['other_holding'].fillna(0,inplace=True)
+	# -- rm -- account_holding['account_holding'].fillna(0,inplace=True)
+	# -- rm -- account_holding['portfs_holding'].fillna(0,inplace=True)
+	# -- rm -- account_holding['other_holding'].fillna(0,inplace=True)
+	account_holding['account_holding'] = account_holding['account_holding'].fillna(0)
+	account_holding['portfs_holding'] = account_holding['portfs_holding'].fillna(0)
+	account_holding['other_holding'] = account_holding['other_holding'].fillna(0)
 	account_holding['holding_diff'] = account_holding['account_holding'] - account_holding['portfs_holding'] - account_holding['other_holding']
 	account_holding = account_holding.replace(0,"--")
 	account_holding = account_holding.sort_values(by="symbol").reset_index()
