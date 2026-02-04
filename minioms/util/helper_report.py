@@ -354,7 +354,8 @@ def load_openpos_for_portf(*,db_folder,book,portf):
 	return openpos[1].iloc[:,:2]
 
 def load_other_holdings_for_acct(*,db_folder,account):
-	return oms_io.load_other_holdings_for_acct__bk_rpt(**locals())
+	df0 = oms_io.load_other_holdings_for_acct__bk_rpt(**locals())
+	return df0
 
 def load_account_position_report(*,db_folder,account):
 	acct_folder= db_path(db_folder=db_folder,strategy=account)
@@ -366,7 +367,7 @@ def write_account_position_report(*,db_folder,account,report):
 	report.to_csv(f"{acct_folder}/position_report.csv",index_label='line#')
 
 def parse_portf_name(portf):
-	parser = re.compile('^(.*)_(n100|s500|r1000)[_\|]([A-Z_a-z0-9]*)$')
+	parser = re.compile('^(.*)_(n100|s500|r1000)[_|]([A-Z_a-z0-9]*)$')
 	result = parser.match(portf)
 	if(result is None):
 		raise ValueError(f"[{portf}] not a portf name")

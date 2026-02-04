@@ -22,6 +22,7 @@ def load_symbols_map__sfunc(directory):
 # --
 # --
 from ..obj.OtherHoldings import io_utility as othh_u_io
+from ..obj.OtherHoldings import br_utility as othh_u_br
 # --
 def load_other_holdings_for_acct__bk_rpt(*,db_folder,account):
 	other_holdings = oio.OtherHoldings_IO(
@@ -29,9 +30,11 @@ def load_other_holdings_for_acct__bk_rpt(*,db_folder,account):
 		account=account,
 		load=True
 	)
-	return othh_u_io.bookkeeper_report_load_wrapper(
-		other_holdings.df.copy()
-	)
+	return othh_u_br.group_by_symbol(
+			othh_u_io.bookkeeper_report_load_wrapper(
+				other_holdings.df.copy()
+			)
+		)
 
 # --
 # --
