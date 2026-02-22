@@ -30,13 +30,23 @@ from jackutil import containerutil as cutil
 from pprint import pprint
 from pathlib import Path
 import re
-from . import oms_io
 from ..obj import PortfSetting
 from .external_interface import mktprc_loader
 from itertools import product
 from ..oms_db.classes_io import PortfSetting_IO
 from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
+from ..obj.Accounts import io_utility as acct_u_io
+from ..obj.Books import io_utility as books_u_io
+from ..obj.Portfolios import io_utility as portfs_u_io
+from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
+from ..obj.AccountOrders import io_utility as ao_u_io
+from ..obj.AcctPositions import io_utility as acctpos_u_io
+from ..obj.PortfPositions import io_utility as portfpos_u_io
+from ..obj.PairedTxns import io_utility as pairedtxns_u_io
+from ..obj.PortfDividendTxns import io_utility as portfdtxns_u_io
+from ..obj.OtherHoldings import io_utility as othh_u_io
+from ..obj.OtherHoldings import br_utility as othh_u_br
 # --
 from simple_func import get_syst_var
 db_dir = get_syst_var("db_dir")
@@ -49,6 +59,20 @@ def __p__(*args):
 # --
 # --
 # --
+def __load_account_orders__bk_pospro(*,db_folder,account):
+	return ao_u_io.load(db_dir=db_folder,account=account).df.copy()
+
+def __load_account_orders__bk_rpt(*,db_folder,account):
+	return __load_account_orders__bk_pospro(**locals)  # bug preserved
+
+def __load_other_holdings_for_acct__bk_rpt(*,db_folder,account):
+	other_holdings = othh_u_io.load(db_dir=db_folder,account=account)
+	return othh_u_br.group_by_symbol(
+		othh_u_io.bookkeeper_report_load_wrapper(
+			other_holdings.df.copy()
+		)
+	)
+
 def check_version(book_version,version):
 	if(version>book_version):
 		raise Exception(f"book version is {book_version}; require version is {version} or above")
@@ -79,24 +103,24 @@ def load_market_price(somepos,cache={},clear_cache=False):
 	return somepos
 
 def load_tbsys_accounts(*,db_folder):
-	return oms_io.load_tbsys_accounts__bk_rpt(**locals())
+	return acct_u_io.load(db_dir=db_folder).df.copy()
 
 def load_tbsys_books(*,db_folder):
-	return oms_io.load_tbsys_books__bk_rpt(**locals())
+	return books_u_io.load(db_dir=db_folder).df.copy()
 
 def load_tbsys_portfs(*,db_folder):
-	return oms_io.load_tbsys_portfs__bk_rpt(**locals())
+	return portfs_u_io.load(db_dir=db_folder).df.copy()
 
 def load_daily_orders(*,db_folder,book,portf):
-	orders = oms_io.load_daily_orders__bk_rpt(db_folder=db_folder,strategy=book,portfolio=portf)
+	orders = portfdord_u_io.load(db_dir=db_folder,strategy=book,portfolio=portf).df.copy()
 	orders = orders.iloc[:,1:]
 	return orders
 
 def load_account_orders(*,db_folder,account):
-	return oms_io.load_account_orders__bk_rpt(**locals())
+	return __load_account_orders__bk_rpt(**locals())
 
 def load_account_positions(*,db_folder,account):
-	return oms_io.load_account_positions__bk_rpt(**locals())
+	return acctpos_u_io.load(db_dir=db_folder,account=account).df.copy()
 	
 # -- rm -- def load_portf_settings(*,db_folder,book,portf,from_pickle=False):
 # -- rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=book,book_name=portf)
@@ -108,7 +132,7 @@ def load_account_positions(*,db_folder,account):
 # -- rm -- 			return eval(py_file.read())
 
 def load_openpos(*,db_folder,strategy,book_name,incl_rt=True):
-	openpos = oms_io.load_open_pos__bk_rpt(db_folder=db_folder,strategy=strategy,portfolio=book_name)
+	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.reset_index(drop=True)
 	summary = openpos.groupby("symbol").sum()["unit"]
 	if(incl_rt):
 		mktval = load_market_price(pd.DataFrame(summary).reset_index(inplace=False))
@@ -120,7 +144,7 @@ def load_openpos(*,db_folder,strategy,book_name,incl_rt=True):
 	return (openpos,mktval)
 
 def load_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=True):
-	txns = oms_io.load_paired_txns_bk_rpt(db_folder=db_folder,strategy=strategy,portfolio=book_name)
+	txns = pairedtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 	if(drop_cash_txn):
 		txns = txns[ (txns['type']=='BUY') + (txns['type']=='SEL') ]
 	if(details_only):
@@ -129,7 +153,7 @@ def load_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=Tr
 	return txns,balance
 
 def load_dividend(*,db_folder,strategy,book_name,details_only=False):
-	dividend = oms_io.load_dividend__bk_rpt(db_folder=db_folder,strategy=strategy,portfolio=book_name)
+	dividend = portfdtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 	if(details_only):
 		return dividend
 	ttl_divy = dividend['amount'].sum()
@@ -354,8 +378,7 @@ def load_openpos_for_portf(*,db_folder,book,portf):
 	return openpos[1].iloc[:,:2]
 
 def load_other_holdings_for_acct(*,db_folder,account):
-	df0 = oms_io.load_other_holdings_for_acct__bk_rpt(**locals())
-	return df0
+	return __load_other_holdings_for_acct__bk_rpt(**locals())
 
 def load_account_position_report(*,db_folder,account):
 	acct_folder= db_path(db_folder=db_folder,strategy=account)

@@ -18,8 +18,14 @@ from pprint import pprint
 from pathlib import Path
 # -- rm -- from simple_func import convert_columns_to_string
 # -- rm -- from simple_func import get_syst_var
-from . import oms_io
 import gspread_util as gsu
+from ..obj.PairedTxns import io_utility as pairedtxns_u_io
+from ..obj.PortfPositions import io_utility as portfpos_u_io
+from ..obj.PortfDividendTxns import io_utility as portfdtxns_u_io
+from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
+from ..obj.Portfolios import io_utility as portfs_u_io
+from ..obj.AcctPositions import io_utility as acctpos_u_io
+from ..obj.Executions import io_utility as exec_u_io
 import sys
 import os 
 import gspread
@@ -41,6 +47,18 @@ def __p__(*args):
 # --
 # -- rm -- def read_db_path(*,db_folder="../../../algo-active/db",account=None,strategy=None,book_name=None):
 # -- rm -- def read_db_path(*,db_folder=db_dir,account=None,strategy=None,book_name=None):
+def __load_open_positions__bk_exp_gsp(*,db_folder,strategy,portfolio):
+	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
+	return openpos.df.reset_index(drop=True)
+
+def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
+	# --
+	# -- not sure what the 'line#' column for, remove it for now
+	# !! might need to fix the source
+	# --
+	div_txn = portfdtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
+	return div_txn.df.reset_index(drop=True)
+
 def read_db_path(*,db_folder,account=None,strategy=None,book_name=None):
 	portf_db_dir = None
 	if(book_name is not None):
@@ -82,7 +100,7 @@ def load_setting_as_df(books,val_as_txt=False):
 def load_paired_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=True):
 # -- rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
 # -- rm -- 	txns = pd.read_csv(f"{portf_folder}/paired_txn.csv")
-	txns = oms_io.load_paired_txn__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
+	txns = pairedtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 	if(drop_cash_txn):
 		txns = txns[ (txns['type']=='BUY') + (txns['type']=='SEL') ]
 	txns = txns.iloc[:,1:].reset_index(drop=True)
@@ -101,7 +119,7 @@ def load_paired_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash
 # -- rm -- 	return positions
 
 def load_open_positions(*,db_folder,strategy,book_name):
-	return oms_io.load_open_positions__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
+	return __load_open_positions__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
 
 def is_old_dividend_txn_format(txns):
 	return "unit" not in txns.columns
@@ -122,7 +140,7 @@ def load_dividend(*,db_folder,strategy,book_name,details_only=False,drop_cash_tx
 	# !! might need to fix the source
 	# --
 # -- rm -- 	txns = pd.read_csv(f"{portf_folder}/dividend_txn.csv",index_col='line#').reset_index(drop=True)
-	txns = oms_io.load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)
+	txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)
 	if(is_old_dividend_txn_format(txns)):
 		txns = update_dividend_txn_format(txns)
 	if(drop_cash_txn):
@@ -344,13 +362,13 @@ def write_orders_page(workbook, all_orders):
 # -- copied from bookkeeper_daily_orders.py
 # --
 def local__load_portf_orders(*,db_folder,book,portf):
-	return oms_io.load_portf_orders__bk_dord(db_folder=db_folder,strategy=book,portfolio=portf)
+	return portfdord_u_io.load(db_dir=db_folder,strategy=book,portfolio=portf).df.copy()
 
 # --
 # -- copied from bookkeeper_report.py
 # --
 def local__load_tbsys_portfs(*,db_folder):
-	return oms_io.load_tbsys_portfs__bk_rpt(**locals())
+	return portfs_u_io.load(db_dir=db_folder).df.copy()
 
 def load_all_orders(*,db_folder,dtstr=None):
 	portfs = local__load_tbsys_portfs(db_folder=db_folder)
@@ -397,7 +415,7 @@ def write_blotters_page(workbook, all_blotters, am_pm):
 # -- copied from bookkeeper_report.py
 # --
 def local__load_account_positions(*,db_folder,account):
-	return oms_io.load_account_positions__bk_rpt(**locals())
+	return acctpos_u_io.load(db_dir=db_folder,account=account).df.copy()
 	
 def load_all_blotters(*,db_folder):
 	portfs = local__load_tbsys_portfs(db_folder=db_folder)
@@ -470,10 +488,7 @@ def write_execs_page(workbook, all_execs):
 # -- copied from bookkeeper_post_process.py
 # --
 def local__load_account_executions_raw(db_folder,account):
-	return oms_io.load_account_executions_raw__bk_pospro(
-		db_folder=db_folder, 
-		account=account
-	)
+	return exec_u_io.load(db_dir=db_folder,account=account).df.copy()
 
 def safe_load_account_executions(db_folder,account):
 	try:
