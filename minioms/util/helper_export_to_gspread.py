@@ -123,7 +123,8 @@ def load_dividend(*,db_folder,strategy,book_name,details_only=False,drop_cash_tx
 	# -- not sure what the 'line#' column for, remove it for now
 	# !! might need to fix the source
 	# --
-	txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)
+	# -- fix -- txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)  # old: portf= should be portfolio=
+	txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
 	if(is_old_dividend_txn_format(txns)):
 		txns = update_dividend_txn_format(txns)
 	if(drop_cash_txn):

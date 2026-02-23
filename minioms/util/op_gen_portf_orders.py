@@ -243,9 +243,9 @@ def portf_financial_summary(*,openpos=None,dividend_txn=None,db_folder=None,stra
 # --
 # --
 # --
-import financialmodelingprep as fmp
+# -- fix -- import financialmodelingprep as fmp
 from .external_interface import mktprc_loader
-from ..obj import PortfSetting
+# -- fix -- from ..obj import PortfSetting
 # --
 # --
 # --

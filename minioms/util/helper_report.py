@@ -61,7 +61,8 @@ def __load_account_orders__bk_pospro(*,db_folder,account):
 	return ao_u_io.load(db_dir=db_folder,account=account).df.copy()
 
 def __load_account_orders__bk_rpt(*,db_folder,account):
-	return __load_account_orders__bk_pospro(**locals)  # bug preserved
+	# -- fix -- return __load_account_orders__bk_pospro(**locals)  # old: locals missing ()
+	return __load_account_orders__bk_pospro(**locals())
 
 def __load_other_holdings_for_acct__bk_rpt(*,db_folder,account):
 	other_holdings = othh_u_io.load(db_dir=db_folder,account=account)
