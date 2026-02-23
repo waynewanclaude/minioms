@@ -495,7 +495,7 @@ def load_all_execs(*,db_folder):
 	all_execs = all_execs[[all_execs.columns[-1]]+list(all_execs.columns[:-1])]
 	return all_execs
 
-def export_execs_to_gspread(*,db_folder,svc_cred_fname):
+def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
 	workbook = open_workbook(svc_cred_fname,"tb2_tradebot")
 	all_execs = load_all_execs(db_folder=db_folder)
 	write_execs_page(workbook, all_execs)
