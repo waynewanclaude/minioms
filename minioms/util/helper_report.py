@@ -65,12 +65,23 @@ def __load_account_orders__bk_rpt(*,db_folder,account):
 	return __load_account_orders__bk_pospro(**locals())
 
 def __load_other_holdings_for_acct__bk_rpt(*,db_folder,account):
-	other_holdings = othh_u_io.load(db_dir=db_folder,account=account)
-	return othh_u_br.group_by_symbol(
-		othh_u_io.bookkeeper_report_load_wrapper(
-			other_holdings.df.copy()
-		)
+	from ..oms_db import classes_io as oio
+	other_holdings = oio.OtherHoldings_IO(
+		db_dir=db_folder,
+		account=account,
+		load=True
 	)
+	return othh_u_br.group_by_symbol(
+			othh_u_io.bookkeeper_report_load_wrapper(
+				other_holdings.df.copy()
+			)
+		)
+# -- bad_code_by_claude -- 	other_holdings = othh_u_io.load(db_dir=db_folder,account=account)
+# -- bad_code_by_claude -- 	return othh_u_br.group_by_symbol(
+# -- bad_code_by_claude -- 		othh_u_io.bookkeeper_report_load_wrapper(
+# -- bad_code_by_claude -- 			other_holdings.df.copy()
+# -- bad_code_by_claude -- 		)
+# -- bad_code_by_claude -- 	)
 
 def check_version(book_version,version):
 	if(version>book_version):
