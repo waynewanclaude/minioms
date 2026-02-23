@@ -30,10 +30,8 @@ from jackutil import containerutil as cutil
 from pprint import pprint
 from pathlib import Path
 import re
-from ..obj import PortfSetting
 from .external_interface import mktprc_loader
 from itertools import product
-from ..oms_db.classes_io import PortfSetting_IO
 from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
 from ..obj.Accounts import io_utility as acct_u_io
