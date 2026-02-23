@@ -1,17 +1,12 @@
-from ..oms_db.classes_io import ExitConds_IO
 from ..obj.ExitConds import io_utility as exitconds_io
 from ..obj.ExitConds import br_utility as exitconds_br
-from ..oms_db.classes_io import Buylist_IO
 from ..obj.Buylist import io_utility as buylist_io
 from ..obj.Buylist import br_utility as buylist_br
-from ..oms_db.classes_io import PortfPositions_IO
 from ..obj.PortfPositions import io_utility as portfpos_io
 from ..obj.PortfPositions import br_utility as portfpos_br
-from ..oms_db.classes_io import PortfDividendTxns_IO
 from ..obj.PortfDividendTxns import io_utility as portfdtxns_io
 from ..obj.PortfDividendTxns import br_utility as portfdtxns_br
 from ..obj.PairedTxns import io_utility as pairedtxns_io
-from ..oms_db.classes_io import PortfSetting_IO
 from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
 from jackutil.microfunc import types_validate
@@ -74,14 +69,6 @@ def read_db_path(*,db_folder=None,account=None,strategy=None,book_name=None):
 	# --
 	return portf_db_dir
 
-# -- rm -- def load_portf_settings(*,db_folder,strategy,book_name,from_pickle=False):
-# -- rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
-# -- rm -- 	if(from_pickle):
-# -- rm -- 		with open(f"{portf_folder}/portf_setting.pk", "rb") as pk_file:
-# -- rm -- 			return pickle.load(pk_file)
-# -- rm -- 	else:
-# -- rm -- 		with open(f"{portf_folder}/portf_setting.py", "rt") as py_file:
-# -- rm -- 			return eval(py_file.read())
 
 def get_portf_attr(portf):
 	portf_attr = portf.get('portf_attr',[])
@@ -226,27 +213,6 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 		"instructions" : instructions,
 	}
 
-# -- rm -- def portf_financial_summary(*,portf_settings=None,openpos=None,dividend_txn=None,db_folder=None,strategy=None,book_name=None,**kargs):
-# -- rm -- 	if(db_folder is not None):
-# -- rm -- 		paired_txn = load_paired_txn(db_folder=db_folder, strategy=strategy,book_name=book_name)
-# -- rm -- 		openpos = load_openpos(db_folder=db_folder, strategy=strategy,book_name=book_name)
-# -- rm -- 		portf_settings = load_portf_settings(db_folder=db_folder, strategy=strategy,book_name=book_name)
-# -- rm -- 		dividend_txn = load_dividend(db_folder=db_folder, strategy=strategy,book_name=book_name)
-# -- rm -- 	if('price' not in openpos.columns):
-# -- rm -- 		openpos = load_market_price(pd.DataFrame(openpos))
-# -- rm -- 	# --
-# -- rm -- 	total_cost = paired_txn['cost'].sum()
-# -- rm -- 	market_val = ( openpos['unit'] * openpos['price'] ).sum()
-# -- rm -- 	n_openpos = openpos.shape[0]
-# -- rm -- 	# --
-# -- rm -- 	dividend_val = dividend_txn['amount'].sum()
-# -- rm -- 	# --
-# -- rm -- 	return {
-# -- rm -- 		"total_cost" : total_cost,
-# -- rm -- 		"dividend_val" : dividend_val,
-# -- rm -- 		"market_value" : market_val,
-# -- rm -- 		"#openpos" : n_openpos,
-# -- rm -- 	}
 
 def portf_financial_summary(*,openpos=None,dividend_txn=None,db_folder=None,strategy=None,book_name=None,**kargs):
 	if(db_folder is not None):

@@ -16,8 +16,6 @@ from jackutil import containerutil as cutil
 # --
 from pprint import pprint
 from pathlib import Path
-# -- rm -- from simple_func import convert_columns_to_string
-# -- rm -- from simple_func import get_syst_var
 import gspread_util as gsu
 from ..obj.PairedTxns import io_utility as pairedtxns_u_io
 from ..obj.PortfPositions import io_utility as portfpos_u_io
@@ -33,8 +31,6 @@ from datetime import datetime
 
 # --
 # --
-# -- rm -- db_dir = get_syst_var("db_dir")
-# -- rm -- svc_cred_fname = get_syst_var("google_svc_cred_filename")
 # --
 # --
 
@@ -45,8 +41,6 @@ def __p__(*args):
 # -- strategy = books.xml:/*/wb_name
 # -- book_name = books.xml:/*/sh_name
 # --
-# -- rm -- def read_db_path(*,db_folder="../../../algo-active/db",account=None,strategy=None,book_name=None):
-# -- rm -- def read_db_path(*,db_folder=db_dir,account=None,strategy=None,book_name=None):
 def __load_open_positions__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
 	return openpos.df.reset_index(drop=True)
@@ -98,8 +92,6 @@ def load_setting_as_df(books,val_as_txt=False):
 	return flat_portolios
 
 def load_paired_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=True):
-# -- rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
-# -- rm -- 	txns = pd.read_csv(f"{portf_folder}/paired_txn.csv")
 	txns = pairedtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 	if(drop_cash_txn):
 		txns = txns[ (txns['type']=='BUY') + (txns['type']=='SEL') ]
@@ -109,14 +101,6 @@ def load_paired_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash
 	balance = txns['cost'].sum()
 	return txns,balance
 
-# -- rm -- def load_open_positions(*,db_folder,strategy,book_name):
-# -- rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
-# -- rm -- 	# --
-# -- rm -- 	# -- not sure what the 'line#' column for, remove it for now
-# -- rm -- 	# !! might need to fix the source
-# -- rm -- 	# --
-# -- rm -- 	positions = pd.read_csv(f"{portf_folder}/open_pos.csv",index_col='line#').reset_index(drop=True)
-# -- rm -- 	return positions
 
 def load_open_positions(*,db_folder,strategy,book_name):
 	return __load_open_positions__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
@@ -139,7 +123,6 @@ def load_dividend(*,db_folder,strategy,book_name,details_only=False,drop_cash_tx
 	# -- not sure what the 'line#' column for, remove it for now
 	# !! might need to fix the source
 	# --
-# -- rm -- 	txns = pd.read_csv(f"{portf_folder}/dividend_txn.csv",index_col='line#').reset_index(drop=True)
 	txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)
 	if(is_old_dividend_txn_format(txns)):
 		txns = update_dividend_txn_format(txns)
@@ -548,131 +531,12 @@ def get_gsheet_last_update_time(workbook,sheet_name):
 		print(f"Error fetching last update time: {e}")
 	return None
 
-# -- rm -- def merge_csv_files_to_gsheet_with_retry(*, directories, workbook, fname, retry_count=10, retry_pause=60):
-# -- rm -- 	return retry(
-# -- rm -- 		lambda : merge_csv_files_to_gsheet(directories=directories,workbook=workbook,fname=fname),
-# -- rm -- 		retry=retry_count, exceptTypes=(BaseException,Exception),cooldown=retry_pause,rtnEx=False,silent=False
-# -- rm -- 	)
-# -- rm -- 
-# -- rm -- def merge_csv_files_to_gsheet(*,directories, workbook, fname):
-# -- rm -- 	all_data = []
-# -- rm -- 	max_last_mod_time = None
-# -- rm -- 	last_update_time_logged = get_gsheet_last_update_time(workbook,fname)
-# -- rm -- 	file_df = None
-# -- rm -- 	for directory in directories:
-# -- rm -- 		for subdir, _, files in os.walk(directory):
-# -- rm -- 			for file in files:
-# -- rm -- 				if file == fname:
-# -- rm -- 					file_path = os.path.join(subdir, file)
-# -- rm -- 					# last_mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat()
-# -- rm -- 					last_mod_time = os.path.getmtime(file_path)
-# -- rm -- 					if(max_last_mod_time is None):
-# -- rm -- 						max_last_mod_time = last_mod_time
-# -- rm -- 					max_last_mod_time = max(last_mod_time,max_last_mod_time)
-# -- rm -- 					subdir_name = os.path.basename(subdir)
-# -- rm -- 					dir_name = os.path.basename(directory)
-# -- rm -- 					file_df = pd.read_csv(file_path)
-# -- rm -- 					file_df.insert(0, 'Subdirectory', subdir_name)
-# -- rm -- 					file_df.insert(0, 'Directory', dir_name)
-# -- rm -- 					if(len(file_df)>0):
-# -- rm -- 						all_data.append(file_df)
-# -- rm -- 	# --
-# -- rm -- 	# -- check if the data is newer than last export
-# -- rm -- 	# --
-# -- rm -- 	if(max_last_mod_time):
-# -- rm -- 		max_last_mod_time = datetime.fromtimestamp(max_last_mod_time)
-# -- rm -- 	updated = False
-# -- rm -- 	if(max_last_mod_time and last_update_time_logged):
-# -- rm -- 		if max_last_mod_time > last_update_time_logged:
-# -- rm -- 			updated = True
-# -- rm -- 	elif(max_last_mod_time and not last_update_time_logged):
-# -- rm -- 		updated = True
-# -- rm -- 	# --
-# -- rm -- 	# -- update only when the file is newer
-# -- rm -- 	# --
-# -- rm -- 	print(f"fname:{fname}; updated:{updated} -- max_last_mod_time:{max_last_mod_time}; last_update_time_logged:{last_update_time_logged}")
-# -- rm -- 	if(updated):
-# -- rm -- 		# --
-# -- rm -- 		combined_df = file_df
-# -- rm -- 		if(len(all_data)>0):
-# -- rm -- 			combined_df = pd.concat(all_data, ignore_index=True)
-# -- rm -- 		combined_df = convert_columns_to_string(combined_df)
-# -- rm -- 		sheet = gsu.get_or_create_worksheet(workbook,fname,create_if_missing=True,clear_ws=True)
-# -- rm -- 		write_values=[combined_df.columns.values.tolist()] + combined_df.values.tolist()
-# -- rm -- 		range_LR = gsu.to_a1( np.asarray(write_values).shape )
-# -- rm -- 		sheet.update(range_name=f"A1:{range_LR}",values=write_values,value_input_option="USER_ENTERED")
-# -- rm -- 		# --
-# -- rm -- 		# -- Update the "maint" worksheet
-# -- rm -- 		# --
-# -- rm -- 		last_update_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-# -- rm -- 		update_maint_sheet(workbook, fname, last_update_time, max_last_mod_time.isoformat())
-# -- rm -- 		gsu.move_worksheet_to_second_position(workbook, fname)
 
 # --
 # -- merge multiple csv files (with same columns spec, enforced)
 # -- into a single csv files with the same columns
 # -- over write the old single csv if any of the source files is newer
 # --
-# -- rm -- def merge_csv_files(*, directories, fname, destination):
-# -- rm -- 	all_data = []
-# -- rm -- 	max_last_mod_time = None
-# -- rm -- 	destination_fname = f'{destination}/{fname}'
-# -- rm -- 	# --
-# -- rm -- 	last_update_time_logged = datetime.fromtimestamp(1)
-# -- rm -- 	if(os.path.exists(destination_fname)):
-# -- rm -- 		last_update_time_logged = datetime.fromtimestamp(os.path.getmtime(destination_fname))
-# -- rm -- 	# --
-# -- rm -- 	file_df = None
-# -- rm -- 	for directory in directories:
-# -- rm -- 		for subdir, _, files in os.walk(directory):
-# -- rm -- 			for file in files:
-# -- rm -- 				if file == fname:
-# -- rm -- 					file_path = os.path.join(subdir, file)
-# -- rm -- 					last_mod_time = os.path.getmtime(file_path)
-# -- rm -- 					if(max_last_mod_time is None):
-# -- rm -- 						max_last_mod_time = last_mod_time
-# -- rm -- 					max_last_mod_time = max(last_mod_time,max_last_mod_time)
-# -- rm -- 					subdir_name = os.path.basename(subdir)
-# -- rm -- 					dir_name = os.path.basename(directory)
-# -- rm -- 					file_df = pd.read_csv(file_path)
-# -- rm -- 					file_df.insert(0, 'Subdirectory', subdir_name)
-# -- rm -- 					file_df.insert(0, 'Directory', dir_name)
-# -- rm -- 					if(len(file_df)>0):
-# -- rm -- 						all_data.append(file_df)
-# -- rm -- 	# --
-# -- rm -- 	# -- check if the data is newer than last export
-# -- rm -- 	# --
-# -- rm -- 	if(max_last_mod_time):
-# -- rm -- 		max_last_mod_time = datetime.fromtimestamp(max_last_mod_time)
-# -- rm -- 	updated = False
-# -- rm -- 	if(max_last_mod_time and last_update_time_logged):
-# -- rm -- 		if(max_last_mod_time > last_update_time_logged):
-# -- rm -- 			updated = True
-# -- rm -- 	elif(max_last_mod_time and not last_update_time_logged):
-# -- rm -- 		updated = True
-# -- rm -- 	# --
-# -- rm -- 	# -- update only when the file is newer
-# -- rm -- 	# --
-# -- rm -- 	print(f"fname:{destination_fname}; updated:{updated} -- max_last_mod_time:{max_last_mod_time}; last_update_time_logged:{last_update_time_logged}")
-# -- rm -- 	if(updated):
-# -- rm -- 		# --
-# -- rm -- 		combined_df = file_df
-# -- rm -- 		if(len(all_data)>0):
-# -- rm -- 			combined_df = pd.concat(all_data, ignore_index=True)
-# -- rm -- 		combined_df = convert_columns_to_string(combined_df)
-# -- rm -- 		combined_df.to_csv(destination_fname,index=False,float_format="%0.0f")
-# -- rm -- 		print(combined_df)
-# -- rm -- 		
-# -- rm -- # -- 		sheet = gsu.get_or_create_worksheet(workbook,fname,create_if_missing=True,clear_ws=True)
-# -- rm -- # -- 		write_values=[combined_df.columns.values.tolist()] + combined_df.values.tolist()
-# -- rm -- # -- 		range_LR = gsu.to_a1( np.asarray(write_values).shape )
-# -- rm -- # -- 		sheet.update(range_name=f"A1:{range_LR}",values=write_values,value_input_option="USER_ENTERED")
-# -- rm -- # -- 		# --
-# -- rm -- # -- 		# -- Update the "maint" worksheet
-# -- rm -- # -- 		# --
-# -- rm -- # -- 		last_update_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-# -- rm -- # -- 		update_maint_sheet(workbook, fname, last_update_time, max_last_mod_time.isoformat())
-# -- rm -- # -- 		gsu.move_worksheet_to_second_position(workbook, fname)
 
 def convert_columns_to_string(df):
 	for col in df.columns:

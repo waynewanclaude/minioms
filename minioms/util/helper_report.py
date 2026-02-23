@@ -122,14 +122,6 @@ def load_account_orders(*,db_folder,account):
 def load_account_positions(*,db_folder,account):
 	return acctpos_u_io.load(db_dir=db_folder,account=account).df.copy()
 	
-# -- rm -- def load_portf_settings(*,db_folder,book,portf,from_pickle=False):
-# -- rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=book,book_name=portf)
-# -- rm -- 	if(from_pickle):
-# -- rm -- 		with open(f"{portf_folder}/portf_setting.pk", "rb") as pk_file:
-# -- rm -- 			return pickle.load(pk_file)
-# -- rm -- 	else:
-# -- rm -- 		with open(f"{portf_folder}/portf_setting.py", "rt") as py_file:
-# -- rm -- 			return eval(py_file.read())
 
 def load_openpos(*,db_folder,strategy,book_name,incl_rt=True):
 	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.reset_index(drop=True)
@@ -435,9 +427,6 @@ def compare_account_portfs_holding(*,db_folder,account):
 	# !!
 	# !! can only do this after other_holding is expanded to account_holding dimension !!
 	# !!
-	# -- rm -- account_holding['account_holding'].fillna(0,inplace=True)
-	# -- rm -- account_holding['portfs_holding'].fillna(0,inplace=True)
-	# -- rm -- account_holding['other_holding'].fillna(0,inplace=True)
 	account_holding['account_holding'] = account_holding['account_holding'].fillna(0)
 	account_holding['portfs_holding'] = account_holding['portfs_holding'].fillna(0)
 	account_holding['other_holding'] = account_holding['other_holding'].fillna(0)
