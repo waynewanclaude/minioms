@@ -57,12 +57,18 @@ def __p__(*args):
 # --
 # --
 # --
-def __load_account_orders__bk_pospro(*,db_folder,account):
-	return ao_u_io.load(db_dir=db_folder,account=account).df.copy()
-
-def __load_account_orders__bk_rpt(*,db_folder,account):
-	# -- fix -- return __load_account_orders__bk_pospro(**locals)  # old: locals missing ()
-	return __load_account_orders__bk_pospro(**locals())
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: three-layer call chain: load_account_orders → __load_account_orders__bk_rpt
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: → __load_account_orders__bk_pospro. The __bk_rpt layer now just forwards
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: with **locals(). Once the # -- fix -- line is confirmed working, consider
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: collapsing all three into a single function.
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def __load_account_orders__bk_pospro(*,db_folder,account):
+# -- (HUM) pending_rm -- def __load_account_orders__bk_pospro(*,db_folder,account):
+# -- (HUM) pending_rm -- 	return ao_u_io.load(db_dir=db_folder,account=account).df.copy()
+# -- (HUM) pending_rm -- 
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def __load_account_orders__bk_rpt(*,db_folder,account):
+# -- (HUM) pending_rm -- def __load_account_orders__bk_rpt(*,db_folder,account):
+# -- (HUM) pending_rm -- 	# -- fix -- return __load_account_orders__bk_pospro(**locals)  # old: locals missing ()
+# -- (HUM) pending_rm -- 	return __load_account_orders__bk_pospro(**locals())
 
 def __load_other_holdings_for_acct__bk_rpt(*,db_folder,account):
 	from ..oms_db import classes_io as oio
@@ -120,8 +126,9 @@ def load_daily_orders(*,db_folder,book,portf):
 	orders = orders.iloc[:,1:]
 	return orders
 
-def load_account_orders(*,db_folder,account):
-	return __load_account_orders__bk_rpt(**locals())
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def load_account_orders(*,db_folder,account):
+# -- (HUM) pending_rm -- def load_account_orders(*,db_folder,account):
+# -- (HUM) pending_rm -- 	return __load_account_orders__bk_rpt(**locals())
 
 def load_account_positions(*,db_folder,account):
 	return acctpos_u_io.load(db_dir=db_folder,account=account).df.copy()

@@ -53,6 +53,8 @@ def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	div_txn = portfdtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
 	return div_txn.df.reset_index(drop=True)
 
+# !! SCAFFOLDING: read_db_path is temporary scaffolding; same function duplicated in op_gen_portf_orders.py.
+# !! TODO: remove after removing all callers (load_dividend, safe_load_account_executions).
 def read_db_path(*,db_folder,account=None,strategy=None,book_name=None):
 	portf_db_dir = None
 	if(book_name is not None):
@@ -452,28 +454,36 @@ def write_symbol_to_market_pricer(*,inPos=None,tradeLst=None,index_n_ETF=None,mi
 		silent = False,
 	)
 
-# --
-# --
-# --
-def write_execs_page(workbook, all_execs):
-	# --
-	# -- some values, such as <class>, cannot be exported, convert to type str
-	# --
-	for col in all_execs.columns:
-		all_execs[col] = all_execs[col].astype(str)
-	# --
-	retry(
-		lambda : gsu.write(None, None, "imported_execs", "A1:AA1000", all_execs, write_header=True, clear_range=True,create_sheet=True, workbook=workbook),
-		cooldown = 60,
-		silent = False,
-	)
+# -- (HUM) pending_rm -- # --
+# -- (HUM) pending_rm -- # --
+# -- (HUM) pending_rm -- # --
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: the following 5 functions form a dead code chain, only reachable via
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: _DEAD_export_execs_to_gspread. Confirm no external callers, then remove all 5:
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: write_execs_page, local__load_account_executions_raw,
+# -- (HUM) pending_rm -- # (CLU) REVIEWED: safe_load_account_executions, load_all_execs, _DEAD_export_execs_to_gspread.
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def write_execs_page(workbook, all_execs):
+# -- (HUM) pending_rm -- # -- (HUM) local_ref_DEADCODE -- def write_execs_page(workbook, all_execs):
+# -- (HUM) pending_rm -- def write_execs_page(workbook, all_execs):
+# -- (HUM) pending_rm -- 	# --
+# -- (HUM) pending_rm -- 	# -- some values, such as <class>, cannot be exported, convert to type str
+# -- (HUM) pending_rm -- 	# --
+# -- (HUM) pending_rm -- 	for col in all_execs.columns:
+# -- (HUM) pending_rm -- 		all_execs[col] = all_execs[col].astype(str)
+# -- (HUM) pending_rm -- 	# --
+# -- (HUM) pending_rm -- 	retry(
+# -- (HUM) pending_rm -- 		lambda : gsu.write(None, None, "imported_execs", "A1:AA1000", all_execs, write_header=True, clear_range=True,create_sheet=True, workbook=workbook),
+# -- (HUM) pending_rm -- 		cooldown = 60,
+# -- (HUM) pending_rm -- 		silent = False,
+# -- (HUM) pending_rm -- 	)
 
 # --
 # -- copied from bookkeeper_post_process.py
 # --
+# -- (HUM) no_external_ref -- def local__load_account_executions_raw(db_folder,account):
 def local__load_account_executions_raw(db_folder,account):
 	return exec_u_io.load(db_dir=db_folder,account=account).df.copy()
 
+# -- (HUM) no_external_ref -- def safe_load_account_executions(db_folder,account):
 def safe_load_account_executions(db_folder,account):
 	try:
 		acct_folder = read_db_path(db_folder=db_folder,account=account)
@@ -484,22 +494,26 @@ def safe_load_account_executions(db_folder,account):
 		print(f"WARN/INGORNED:{account}:{ex}")
 		return pd.DataFrame(columns='Symbol,Shares,Price,Amount'.split(','))
 
-def load_all_execs(*,db_folder):
-	portfs = local__load_tbsys_portfs(db_folder=db_folder)
-	# --
-	all_execs = []
-	for acct in portfs['trade_acct'].unique():
-		acct_execs = safe_load_account_executions(db_folder=db_folder,account=acct)
-		acct_execs['account'] = acct
-		all_execs.append(acct_execs)
-	all_execs = pd.concat(all_execs,axis=0)
-	all_execs = all_execs[[all_execs.columns[-1]]+list(all_execs.columns[:-1])]
-	return all_execs
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def load_all_execs(*,db_folder):
+# -- (HUM) pending_rm -- # -- (HUM) local_ref_DEADCODE -- def load_all_execs(*,db_folder):
+# -- (HUM) pending_rm -- def load_all_execs(*,db_folder):
+# -- (HUM) pending_rm -- 	portfs = local__load_tbsys_portfs(db_folder=db_folder)
+# -- (HUM) pending_rm -- 	# --
+# -- (HUM) pending_rm -- 	all_execs = []
+# -- (HUM) pending_rm -- 	for acct in portfs['trade_acct'].unique():
+# -- (HUM) pending_rm -- 		acct_execs = safe_load_account_executions(db_folder=db_folder,account=acct)
+# -- (HUM) pending_rm -- 		acct_execs['account'] = acct
+# -- (HUM) pending_rm -- 		all_execs.append(acct_execs)
+# -- (HUM) pending_rm -- 	all_execs = pd.concat(all_execs,axis=0)
+# -- (HUM) pending_rm -- 	all_execs = all_execs[[all_execs.columns[-1]]+list(all_execs.columns[:-1])]
+# -- (HUM) pending_rm -- 	return all_execs
 
-def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
-	workbook = open_workbook(svc_cred_fname,"tb2_tradebot")
-	all_execs = load_all_execs(db_folder=db_folder)
-	write_execs_page(workbook, all_execs)
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
+# -- (HUM) pending_rm -- # -- (HUM) no_local_ref -- def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
+# -- (HUM) pending_rm -- def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
+# -- (HUM) pending_rm -- 	workbook = open_workbook(svc_cred_fname,"tb2_tradebot")
+# -- (HUM) pending_rm -- 	all_execs = load_all_execs(db_folder=db_folder)
+# -- (HUM) pending_rm -- 	write_execs_page(workbook, all_execs)
 
 # --
 # -- Example usage (assuming `workbook` is a gspread spreadsheet object)

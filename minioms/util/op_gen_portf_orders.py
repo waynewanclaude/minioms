@@ -31,16 +31,23 @@ class op_gen_portf_orders:
 		# --
 		return portf_settings,open_pos,exitconds,buylist,dtxns
 
-	def gen_portf_orders(portf_settings,open_pos,exitconds,buylist,dtxns):
-		d_portf_data = {
-			"portf_settings" : portf_settings,
-			"openpos" : open_pos.df,
-			"exitcond" : exitconds.df,
-			"buylist" : buylist.df,
-			"dividend_txn" : dtxns.df,
-		}
-		orders = generate_orders_for_portf(d_portf_data)
-		return orders
+# -- (HUM) no_external_ref -- def gen_portf_orders(portf_settings,open_pos,exitconds,buylist,dtxns): 	
+# -- (HUM) pending_rm -- 	def gen_portf_orders(portf_settings,open_pos,exitconds,buylist,dtxns):
+# -- (HUM) pending_rm -- 		d_portf_data = {
+# -- (HUM) pending_rm -- 			"portf_settings" : portf_settings,
+# -- (HUM) pending_rm -- 			"openpos" : open_pos.df,
+# -- (HUM) pending_rm -- 			"exitcond" : exitconds.df,
+# -- (HUM) pending_rm -- 			"buylist" : buylist.df,
+# -- (HUM) pending_rm -- 			"dividend_txn" : dtxns.df,
+# -- (HUM) pending_rm -- 		}
+# -- (HUM) pending_rm -- 		# (CLU) REVIEWED: generate_orders_for_portf (module-level) expects keyword args
+# -- (HUM) pending_rm -- 		# (CLU) REVIEWED: (*,db_folder,strategy,book_name,portf_attr), but this call passes
+# -- (HUM) pending_rm -- 		# (CLU) REVIEWED: a dict positionally — would raise TypeError at runtime.
+# -- (HUM) pending_rm -- 		# (CLU) REVIEWED: Fix: either rewrite generate_orders_for_portf to accept a d_portf_data
+# -- (HUM) pending_rm -- 		# (CLU) REVIEWED: dict, or align this call with the module-level signature.
+# -- (HUM) pending_rm -- 		# (CLU) REVIEWED: First confirm if this class method is called anywhere externally.
+# -- (HUM) pending_rm -- 		orders = generate_orders_for_portf(d_portf_data)
+# -- (HUM) pending_rm -- 		return orders
 
 	def gen_book_orders(db_dir,book,version=None):
 		orders = generate_orders_for_book(db_folder=db_dir,book=book,version=version)
@@ -56,9 +63,9 @@ import sys
 import os 
 import re
 
-# !! TODO: remove read_db_path; its callers (generate_orders_for_portf, load_exitcond)
-# !! should derive the path via the obj/io_utility layer instead of building it directly.
-# !! Removing it will require deeper changes to those callers.
+# !! SCAFFOLDING: read_db_path is temporary scaffolding; same function duplicated in helper_export_to_gspread.py.
+# !! TODO: remove after removing all callers (generate_orders_for_portf, load_exitcond).
+# !! Callers should derive the path via the obj/io_utility layer instead of building it directly.
 def read_db_path(*,db_folder=None,account=None,strategy=None,book_name=None):
 	portf_db_dir = None
 	if(book_name is not None):
@@ -218,13 +225,24 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 
 
 def portf_financial_summary(*,openpos=None,dividend_txn=None,db_folder=None,strategy=None,book_name=None,**kargs):
-	if(db_folder is not None):
-		paired_txn = load_paired_txn(db_folder=db_folder, strategy=strategy,book_name=book_name)
-		openpos = load_openpos(db_folder=db_folder, strategy=strategy,book_name=book_name)
-		dividend_txn = load_dividend(db_folder=db_folder, strategy=strategy,book_name=book_name)
+# -- (HUM) pending_rm -- 	if(db_folder is not None):
+# -- (HUM) pending_rm -- 		paired_txn = load_paired_txn(db_folder=db_folder, strategy=strategy,book_name=book_name)
+# -- (HUM) pending_rm -- 		openpos = load_openpos(db_folder=db_folder, strategy=strategy,book_name=book_name)
+# -- (HUM) pending_rm -- 		dividend_txn = load_dividend(db_folder=db_folder, strategy=strategy,book_name=book_name)
+	if(db_folder is None):
+		raise ValueError("ERR: db_folder cannot be None")
+	# --
+	paired_txn = load_paired_txn(db_folder=db_folder, strategy=strategy,book_name=book_name)
+	openpos = load_openpos(db_folder=db_folder, strategy=strategy,book_name=book_name)
+	dividend_txn = load_dividend(db_folder=db_folder, strategy=strategy,book_name=book_name)
 	if('price' not in openpos.columns):
 		openpos = load_market_price(pd.DataFrame(openpos))
 	# --
+	# (CLU) REVIEWED: paired_txn is only assigned inside if(db_folder is not None) above.
+	# (CLU) REVIEWED: If called with openpos/dividend_txn directly (db_folder=None),
+	# (CLU) REVIEWED: this line raises NameError: name 'paired_txn' is not defined.
+	# (CLU) REVIEWED: Fix: add paired_txn=None as a parameter and load it only when
+	# (CLU) REVIEWED: db_folder is not None, mirroring the openpos/dividend_txn pattern.
 	total_cost = paired_txn['cost'].sum()
 	market_val = ( openpos['unit'] * openpos['price'] ).sum()
 	n_openpos = openpos.shape[0]
