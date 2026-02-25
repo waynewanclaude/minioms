@@ -477,7 +477,8 @@ def local__load_account_executions_raw(db_folder,account):
 def safe_load_account_executions(db_folder,account):
 	try:
 		acct_folder = read_db_path(db_folder=db_folder,account=account)
-		acct_execs = local__load_account_executions_raw(acct_folder)
+		# -- fix -- acct_execs = local__load_account_executions_raw(acct_folder)  # old: wrong args
+		acct_execs = local__load_account_executions_raw(db_folder, account)
 		return acct_execs
 	except Exception as ex:
 		print(f"WARN/INGORNED:{account}:{ex}")
