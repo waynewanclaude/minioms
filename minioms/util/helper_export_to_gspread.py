@@ -486,8 +486,11 @@ def local__load_account_executions_raw(db_folder,account):
 # -- (HUM) no_external_ref -- def safe_load_account_executions(db_folder,account):
 def safe_load_account_executions(db_folder,account):
 	try:
-		acct_folder = read_db_path(db_folder=db_folder,account=account)
-		# -- fix -- acct_execs = local__load_account_executions_raw(acct_folder)  # old: wrong args
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: acct_folder is computed but no longer used after the bug fix above.
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: Fix: remove acct_folder assignment (and read_db_path call) once
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: confirmed nothing else in this function needs the path.
+# -- (HUM) REVIEWED;pending_rm -- 		acct_folder = read_db_path(db_folder=db_folder,account=account)
+# -- (HUM) REVIEWED;pending_rm -- 		# -- fix -- acct_execs = local__load_account_executions_raw(acct_folder)  # old: wrong args
 		acct_execs = local__load_account_executions_raw(db_folder, account)
 		return acct_execs
 	except Exception as ex:

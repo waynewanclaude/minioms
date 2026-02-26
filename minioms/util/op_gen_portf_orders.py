@@ -264,9 +264,10 @@ def portf_financial_summary(*,openpos=None,dividend_txn=None,db_folder=None,stra
 # --
 # --
 # --
-# -- fix -- import financialmodelingprep as fmp
-from .external_interface import mktprc_loader
-# -- fix -- from ..obj import PortfSetting
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: two disabled imports below have been commented out since the oms_io migration.
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: If confirmed unused, delete both # -- fix -- lines entirely.
+# -- (HUM) REVIEWED;pending_rm -- # -- fix -- import financialmodelingprep as fmp
+# -- (HUM) REVIEWED;pending_rm -- # -- fix -- from ..obj import PortfSetting
 # --
 # --
 # --
@@ -295,6 +296,9 @@ def load_buylist(*,db_folder,strategy,book_name):
 	return buylist_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 
 def load_market_price_impl(req_symbols,cached_data={}):
+	# --
+	from .external_interface import mktprc_loader
+	# --
 	missing_symbols = req_symbols - cached_data.keys()
 	if(len(missing_symbols)>0):
 		print(f"missing_symbols:{missing_symbols}")

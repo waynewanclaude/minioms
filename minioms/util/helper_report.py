@@ -12,7 +12,8 @@ __abspath = os.path.abspath(__file__)
 __dirname = os.path.dirname(__abspath)
 common_dir = f"{__dirname}/../../../../../common"
 sys.path.append(f"{common_dir}/lib/quick_func")
-print(common_dir)
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: debug print that runs at every import — remove it.
+# -- (HUM) REVIEWED;pending_rm -- print(common_dir)
 # --
 import pickle
 import time
@@ -46,10 +47,15 @@ from ..obj.PortfDividendTxns import io_utility as portfdtxns_u_io
 from ..obj.OtherHoldings import io_utility as othh_u_io
 from ..obj.OtherHoldings import br_utility as othh_u_br
 # --
-from simple_func import get_syst_var
-db_dir = get_syst_var("db_dir")
-
-import gspread_util as gsu 
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: module-level side effects — all three lines below execute at import time.
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: (a) get_syst_var reads a system var; if unset the import fails.
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: (b) import gspread_util forces a gspread dependency even for non-gspread callers.
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: Fix: move db_dir and gspread_util into the functions that actually use them,
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: or use a lazy-init pattern. This is a larger refactor — low priority.
+# -- (HUM) REVIEWED;pending_rm -- from simple_func import get_syst_var
+# -- (HUM) REVIEWED;pending_rm -- db_dir = get_syst_var("db_dir")
+# -- (HUM) REVIEWED;pending_rm -- 
+# -- (HUM) REVIEWED;pending_rm -- import gspread_util as gsu
 
 def __p__(*args):
 	print(*args)
@@ -163,8 +169,18 @@ def load_dividend(*,db_folder,strategy,book_name,details_only=False):
 	return dividend,ttl_divy
 
 # --
+# !! (HUM) needed for read_db_path,db_path default param
+# !! (HUM) need to remove read_db_path, db_path
+# !! (HUM) replace calls depeends on read_db_path, db_path by minioms/obj/util_io calls
+# !! (HUM) ask Claude Code to add review comments
+# --
+from simple_func import get_syst_var
+db_dir = get_syst_var("db_dir")
 # --
 # --
+# --
+# (CLU) NEED_REVIEW: SCAFFOLDING — read_db_path builds paths directly. No active callers
+# (CLU) NEED_REVIEW: found in this file. Remove once db_path is also removed.
 def read_db_path(*,db_folder=db_dir,account=None,strategy=None,book_name=None):
 	portf_db_dir = None
 	if(book_name is not None):
@@ -178,6 +194,11 @@ def read_db_path(*,db_folder=db_dir,account=None,strategy=None,book_name=None):
 	# --
 	return portf_db_dir
 
+# (CLU) NEED_REVIEW: SCAFFOLDING — db_path builds paths directly. Active callers:
+# (CLU) NEED_REVIEW:   load_account_position_report, write_account_position_report (both below).
+# (CLU) NEED_REVIEW: Fix: check if position_report.csv has a corresponding obj/io_utility;
+# (CLU) NEED_REVIEW: if not, one should be created so callers can use that instead.
+# (CLU) NEED_REVIEW: Removing db_path also removes the dependency on db_dir/get_syst_var.
 def db_path(*,db_folder=db_dir,account=None,strategy=None,book_name=None):
 	portf_db_dir = None
 	if(strategy is None and book_name is None):
@@ -383,6 +404,9 @@ def load_openpos_for_portf(*,db_folder,book,portf):
 def load_other_holdings_for_acct(*,db_folder,account):
 	return __load_other_holdings_for_acct__bk_rpt(**locals())
 
+# (CLU) NEED_REVIEW: both functions below use db_path (scaffolding) to locate position_report.csv.
+# (CLU) NEED_REVIEW: Fix: replace db_path call with a proper obj/io_utility for position_report.csv
+# (CLU) NEED_REVIEW: once one exists (see db_path comment above).
 def load_account_position_report(*,db_folder,account):
 	acct_folder= db_path(db_folder=db_folder,strategy=account)
 	report = pd.read_csv(f"{acct_folder}/position_report.csv",index_col='line#')
