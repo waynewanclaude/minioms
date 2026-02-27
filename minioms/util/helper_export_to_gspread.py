@@ -1,12 +1,8 @@
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
 # --
-import pickle
-import time
 import pandas as pd
 import numpy as np
-import copy
-from collections import defaultdict
 pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -23,7 +19,6 @@ from ..obj.PortfDividendTxns import io_utility as portfdtxns_u_io
 from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
 from ..obj.Portfolios import io_utility as portfs_u_io
 from ..obj.AcctPositions import io_utility as acctpos_u_io
-from ..obj.Executions import io_utility as exec_u_io
 import sys
 import os 
 import gspread

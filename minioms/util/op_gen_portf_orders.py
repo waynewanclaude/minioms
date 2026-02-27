@@ -1,20 +1,14 @@
 from ..obj.ExitConds import io_utility as exitconds_io
-from ..obj.ExitConds import br_utility as exitconds_br
 from ..obj.Buylist import io_utility as buylist_io
-from ..obj.Buylist import br_utility as buylist_br
 from ..obj.PortfPositions import io_utility as portfpos_io
-from ..obj.PortfPositions import br_utility as portfpos_br
 from ..obj.PortfDividendTxns import io_utility as portfdtxns_io
-from ..obj.PortfDividendTxns import br_utility as portfdtxns_br
 from ..obj.PairedTxns import io_utility as pairedtxns_io
 from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
 from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
 from jackutil.microfunc import types_validate
-from jackutil.microfunc import dt_to_str,str_to_dt,retry
-import jackutil.containerutil as cutil
+from jackutil.microfunc import dt_to_str,retry
 import datetime
-from copy import copy
 import pandas as pd
 import numpy as np
 
@@ -40,11 +34,9 @@ class op_gen_portf_orders:
 # -- old code from bookkeeper_daily_orders.py
 # -- ----------------------------------------------------------------------------
 from pprint import pprint
-from pathlib import Path
 import datetime
 import sys
-import os 
-import re
+import os
 
 
 
