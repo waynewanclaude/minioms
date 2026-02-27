@@ -7,11 +7,10 @@ pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.expand_frame_repr', False)
-from jackutil.microfunc import retry,dt_to_str
+from jackutil.microfunc import retry
 from jackutil import containerutil as cutil
 # --
 from pprint import pprint
-from pathlib import Path
 import gspread_util as gsu
 from ..obj.PairedTxns import io_utility as pairedtxns_u_io
 from ..obj.PortfPositions import io_utility as portfpos_u_io
@@ -19,26 +18,8 @@ from ..obj.PortfDividendTxns import io_utility as portfdtxns_u_io
 from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
 from ..obj.Portfolios import io_utility as portfs_u_io
 from ..obj.AcctPositions import io_utility as acctpos_u_io
-import sys
 import os 
-import gspread
 from datetime import datetime
-
-# --
-# --
-# --
-# --
-
-def __p__(*args):
-	print(*args)
-
-# --
-# -- strategy = books.xml:/*/wb_name
-# -- book_name = books.xml:/*/sh_name
-# --
-def __load_open_positions__bk_exp_gsp(*,db_folder,strategy,portfolio):
-	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
-	return openpos.df.reset_index(drop=True)
 
 def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	# --
@@ -100,6 +81,17 @@ def load_paired_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash
 	return txns,balance
 
 
+# -- (HUM)
+# -- (HUM) unfold __load_open_positions__bk_exp_gsp into load_open_positions
+# -- (HUM)
+# --
+# -- strategy = books.xml:/*/wb_name
+# -- book_name = books.xml:/*/sh_name
+# --
+def __load_open_positions__bk_exp_gsp(*,db_folder,strategy,portfolio):
+	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
+	return openpos.df.reset_index(drop=True)
+
 def load_open_positions(*,db_folder,strategy,book_name):
 	return __load_open_positions__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
 
@@ -116,15 +108,6 @@ def update_dividend_txn_format(txns):
 	return newfmt
 
 def load_dividend(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=True):
-# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: portf_folder is computed but never used — dead assignment leftover from
-# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: before the io_utility migration. Fix: remove this line (and the read_db_path
-# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: call). Once removed, read_db_path above may also be removable.
-# -- (HUM) pending_rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	# -- not sure what the 'line#' column for, remove it for now
-# -- (HUM) pending_rm -- 	# !! might need to fix the source
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	# -- fix -- txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)  # old: portf= should be portfolio=
 	txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
 	if(is_old_dividend_txn_format(txns)):
 		txns = update_dividend_txn_format(txns)

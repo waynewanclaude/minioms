@@ -22,7 +22,6 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.expand_frame_repr', False)
 from jackutil.microfunc import retry
 # --
-from pprint import pprint
 import re
 from .external_interface import mktprc_loader
 from itertools import product

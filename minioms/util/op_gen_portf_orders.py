@@ -31,14 +31,9 @@ class op_gen_portf_orders:
 		return orders
 
 # -- ----------------------------------------------------------------------------
-# -- old code from bookkeeper_daily_orders.py
+# -- code copy from bookkeeper_daily_orders.py (no longer exist)
 # -- ----------------------------------------------------------------------------
 from pprint import pprint
-import datetime
-import sys
-import os
-
-
 
 def get_portf_attr(portf):
 	portf_attr = portf.get('portf_attr',[])
@@ -118,14 +113,11 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 	n_exit_order = exitorders.shape[0]
 	maxpos = portf_basic_info['maxpos']
 	n_open_pos = portf_summary['#openpos']
-	principle = portf_basic_info['principle']
 	ttl_div = portf_summary['dividend_val']
 	ttl_mkt_val = portf_summary['market_value']
 	ttl_cost = portf_summary['total_cost']
 	exitorders_mkt_val = -(exitorders['unit']*exitorders['price']).sum()
-	# -- debug --
-	# -- debug --
-	# -- debug --
+	# -- 
 	print(" # 	exitorders_mkt_val", exitorders_mkt_val)
 	# --
 	# -- for "cash_for_trade" calc
@@ -144,13 +136,8 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 		cash_for_trade = 0
 		cash_per_slot = 0
 	print(" # 	portf_attr", portf_attr)
-# -- DEBUG -- 	print(" # 	n_exit_order", n_exit_order)
 	print(" # 	maxpos", maxpos)
-# -- DEBUG -- 	print(" # 	n_open_pos", n_open_pos)
-# -- DEBUG -- 	print(" # 	principle", principle)
-# -- DEBUG -- 	print(" # 	ttl_div", ttl_div)
 	print(" # 	ttl_mkt_val", ttl_mkt_val)
-# -- DEBUG -- 	print(" # 	ttl_cost", ttl_cost)
 	print(" # 	cash_for_trade", cash_for_trade)
 	print(" # 	n_empty_slot", n_empty_slot)
 	print(" # 	cash_per_slot", cash_per_slot)
@@ -242,7 +229,7 @@ def load_market_price_impl(req_symbols,cached_data={}):
 	result = [ cached_data[sym] for sym in set(req_symbols) ]
 	return result
 
-def load_market_price(somepos,cache={}):
+def load_market_price(somepos):
 	symbols = somepos['symbol'].to_list()
 	if(len(symbols)==0):
 		symbols = ["QQQ"]
@@ -250,11 +237,6 @@ def load_market_price(somepos,cache={}):
 	price_data = pd.DataFrame(price_data).set_index('symbol',drop=True)
 	somepos = somepos.join(other=price_data['price'], on="symbol", how="left")
 	return somepos
-
-__abspath = os.path.abspath(__file__)
-__dirname = os.path.dirname(__abspath)
-common_dir = f"{__dirname}/../../../common"
-sys.path.append(f"{common_dir}/lib/quick_func")
 
 def load_dividend(*,db_folder,strategy,book_name):
 	div_txn = portfdtxns_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
