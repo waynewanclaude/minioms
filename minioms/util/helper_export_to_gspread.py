@@ -29,22 +29,6 @@ def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	div_txn = portfdtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
 	return div_txn.df.reset_index(drop=True)
 
-# -- (HUM) pending_rm -- # !! SCAFFOLDING: read_db_path is temporary scaffolding; same function duplicated in op_gen_portf_orders.py.
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned (see below); load_dividend's call
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: is dead (portf_folder never used). Once both are fixed, remove read_db_path entirely.
-# -- (HUM) pending_rm -- def read_db_path(*,db_folder,account=None,strategy=None,book_name=None):
-# -- (HUM) pending_rm -- 	portf_db_dir = None
-# -- (HUM) pending_rm -- 	if(book_name is not None):
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}/{book_name}"
-# -- (HUM) pending_rm -- 	elif(account is not None):
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{account}"
-# -- (HUM) pending_rm -- 	elif(strategy is not None):
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}"
-# -- (HUM) pending_rm -- 	else:
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/_tbsys_"
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	return portf_db_dir
-# -- (HUM) pending_rm -- 
 # --
 # --
 # --
@@ -161,7 +145,6 @@ def aggregate_openpos(openpos):
 def aggregate_all_openpos_by_sym(all_openpos):
 	aggregate = all_openpos.groupby(by='symbol').agg({'unit':'sum','cost':'sum',})
 	aggregate = aggregate.reset_index(drop=False)
-	aggregate['cost'] = aggregate['cost']
 	aggregate['avg_prc'] = aggregate['cost'] / aggregate['unit']
 	aggregate['current'] = '=lookup("'+aggregate['symbol']+'",pricer!$A$2:$A$600,pricer!$H$2:$H$600)'
 	return aggregate
@@ -169,7 +152,6 @@ def aggregate_all_openpos_by_sym(all_openpos):
 def aggregate_all_openpos_by_idx_sym(all_openpos):
 	aggregate = all_openpos.groupby(by=['strategy','symbol']).agg({'unit':'sum','cost':'sum',})
 	aggregate = aggregate.reset_index(drop=False)
-	aggregate['cost'] = aggregate['cost']
 	aggregate['avg_prc'] = aggregate['cost'] / aggregate['unit']
 	return aggregate
 
@@ -213,7 +195,6 @@ def write_strategy_page(*,workbook,sh_name,setting,open_pos,aggregated,paired_tx
 	)
 	
 def write_settings_page(settings, workbook):
-	range_spec = "A1:AA1000"
 	df0 = settings.copy()
 	df0.reset_index(inplace=True)
 	# --
@@ -437,27 +418,6 @@ def write_symbol_to_market_pricer(*,inPos=None,tradeLst=None,index_n_ETF=None,mi
 	)
 
 
-# -- (HUM) pending_rm -- # --
-# -- (HUM) pending_rm -- # -- copied from bookkeeper_post_process.py
-# -- (HUM) pending_rm -- # --
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: local__load_account_executions_raw has no callers — its only caller
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: (safe_load_account_executions) is itself now orphaned. Fix: remove both functions.
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def local__load_account_executions_raw(db_folder,account):
-# -- (HUM) pending_rm -- def local__load_account_executions_raw(db_folder,account):
-# -- (HUM) pending_rm -- 	return exec_u_io.load(db_dir=db_folder,account=account).df.copy()
-# -- (HUM) pending_rm -- 
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned — load_all_execs and
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: _DEAD_export_execs_to_gspread (its only callers) were deleted in the last cleanup.
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: Fix: remove this function and local__load_account_executions_raw above.
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def safe_load_account_executions(db_folder,account):
-# -- (HUM) pending_rm -- def safe_load_account_executions(db_folder,account):
-# -- (HUM) pending_rm -- 	try:
-# -- (HUM) pending_rm -- 		acct_execs = local__load_account_executions_raw(db_folder, account)
-# -- (HUM) pending_rm -- 		return acct_execs
-# -- (HUM) pending_rm -- 	except Exception as ex:
-# -- (HUM) pending_rm -- 		print(f"WARN/INGORNED:{account}:{ex}")
-# -- (HUM) pending_rm -- 		return pd.DataFrame(columns='Symbol,Shares,Price,Amount'.split(','))
-# -- (HUM) pending_rm -- 
 
 # --
 # -- Example usage (assuming `workbook` is a gspread spreadsheet object)
@@ -668,7 +628,6 @@ def __merged_csv_files_save_gspread_impl___no_chk(*, workbook, merge_res=None):
 	return { "gspread_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
 def merged_csv_files_save_gspread_no_chk(*, workbook=None, merge_res=None):
-#	return __merged_csv_files_save_gspread_impl___no_chk(workbook=workbook,merge_res=merge_res)
 	return retry(
 		lambda : __merged_csv_files_save_gspread_impl___no_chk(workbook=workbook,merge_res=merge_res),
 		retry=5, exceptTypes=(BaseException,Exception),cooldown=90,rtnEx=False,silent=False
