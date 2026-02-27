@@ -454,27 +454,6 @@ def write_symbol_to_market_pricer(*,inPos=None,tradeLst=None,index_n_ETF=None,mi
 		silent = False,
 	)
 
-# -- (HUM) pending_rm -- # --
-# -- (HUM) pending_rm -- # --
-# -- (HUM) pending_rm -- # --
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: the following 5 functions form a dead code chain, only reachable via
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: _DEAD_export_execs_to_gspread. Confirm no external callers, then remove all 5:
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: write_execs_page, local__load_account_executions_raw,
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: safe_load_account_executions, load_all_execs, _DEAD_export_execs_to_gspread.
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def write_execs_page(workbook, all_execs):
-# -- (HUM) pending_rm -- # -- (HUM) local_ref_DEADCODE -- def write_execs_page(workbook, all_execs):
-# -- (HUM) pending_rm -- def write_execs_page(workbook, all_execs):
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	# -- some values, such as <class>, cannot be exported, convert to type str
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	for col in all_execs.columns:
-# -- (HUM) pending_rm -- 		all_execs[col] = all_execs[col].astype(str)
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	retry(
-# -- (HUM) pending_rm -- 		lambda : gsu.write(None, None, "imported_execs", "A1:AA1000", all_execs, write_header=True, clear_range=True,create_sheet=True, workbook=workbook),
-# -- (HUM) pending_rm -- 		cooldown = 60,
-# -- (HUM) pending_rm -- 		silent = False,
-# -- (HUM) pending_rm -- 	)
 
 # --
 # -- copied from bookkeeper_post_process.py
@@ -486,37 +465,12 @@ def local__load_account_executions_raw(db_folder,account):
 # -- (HUM) no_external_ref -- def safe_load_account_executions(db_folder,account):
 def safe_load_account_executions(db_folder,account):
 	try:
-# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: acct_folder is computed but no longer used after the bug fix above.
-# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: Fix: remove acct_folder assignment (and read_db_path call) once
-# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: confirmed nothing else in this function needs the path.
-# -- (HUM) REVIEWED;pending_rm -- 		acct_folder = read_db_path(db_folder=db_folder,account=account)
-# -- (HUM) REVIEWED;pending_rm -- 		# -- fix -- acct_execs = local__load_account_executions_raw(acct_folder)  # old: wrong args
 		acct_execs = local__load_account_executions_raw(db_folder, account)
 		return acct_execs
 	except Exception as ex:
 		print(f"WARN/INGORNED:{account}:{ex}")
 		return pd.DataFrame(columns='Symbol,Shares,Price,Amount'.split(','))
 
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def load_all_execs(*,db_folder):
-# -- (HUM) pending_rm -- # -- (HUM) local_ref_DEADCODE -- def load_all_execs(*,db_folder):
-# -- (HUM) pending_rm -- def load_all_execs(*,db_folder):
-# -- (HUM) pending_rm -- 	portfs = local__load_tbsys_portfs(db_folder=db_folder)
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	all_execs = []
-# -- (HUM) pending_rm -- 	for acct in portfs['trade_acct'].unique():
-# -- (HUM) pending_rm -- 		acct_execs = safe_load_account_executions(db_folder=db_folder,account=acct)
-# -- (HUM) pending_rm -- 		acct_execs['account'] = acct
-# -- (HUM) pending_rm -- 		all_execs.append(acct_execs)
-# -- (HUM) pending_rm -- 	all_execs = pd.concat(all_execs,axis=0)
-# -- (HUM) pending_rm -- 	all_execs = all_execs[[all_execs.columns[-1]]+list(all_execs.columns[:-1])]
-# -- (HUM) pending_rm -- 	return all_execs
-
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
-# -- (HUM) pending_rm -- # -- (HUM) no_local_ref -- def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
-# -- (HUM) pending_rm -- def _DEAD_export_execs_to_gspread(*,db_folder,svc_cred_fname):
-# -- (HUM) pending_rm -- 	workbook = open_workbook(svc_cred_fname,"tb2_tradebot")
-# -- (HUM) pending_rm -- 	all_execs = load_all_execs(db_folder=db_folder)
-# -- (HUM) pending_rm -- 	write_execs_page(workbook, all_execs)
 
 # --
 # -- Example usage (assuming `workbook` is a gspread spreadsheet object)

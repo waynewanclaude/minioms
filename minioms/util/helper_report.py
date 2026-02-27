@@ -12,8 +12,6 @@ __abspath = os.path.abspath(__file__)
 __dirname = os.path.dirname(__abspath)
 common_dir = f"{__dirname}/../../../../../common"
 sys.path.append(f"{common_dir}/lib/quick_func")
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: debug print that runs at every import — remove it.
-# -- (HUM) REVIEWED;pending_rm -- print(common_dir)
 # --
 import pickle
 import time
@@ -48,15 +46,6 @@ from ..obj.OtherHoldings import io_utility as othh_u_io
 from ..obj.OtherHoldings import br_utility as othh_u_br
 from ..obj.AcctPositionReport import io_utility as acctposrpt_u_io
 # --
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: module-level side effects — all three lines below execute at import time.
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: (a) get_syst_var reads a system var; if unset the import fails.
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: (b) import gspread_util forces a gspread dependency even for non-gspread callers.
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: Fix: move db_dir and gspread_util into the functions that actually use them,
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: or use a lazy-init pattern. This is a larger refactor — low priority.
-# -- (HUM) REVIEWED;pending_rm -- from simple_func import get_syst_var
-# -- (HUM) REVIEWED;pending_rm -- db_dir = get_syst_var("db_dir")
-# -- (HUM) REVIEWED;pending_rm -- 
-# -- (HUM) REVIEWED;pending_rm -- import gspread_util as gsu
 
 def __p__(*args):
 	print(*args)
@@ -64,18 +53,6 @@ def __p__(*args):
 # --
 # --
 # --
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: three-layer call chain: load_account_orders → __load_account_orders__bk_rpt
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: → __load_account_orders__bk_pospro. The __bk_rpt layer now just forwards
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: with **locals(). Once the # -- fix -- line is confirmed working, consider
-# -- (HUM) pending_rm -- # (CLU) REVIEWED: collapsing all three into a single function.
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def __load_account_orders__bk_pospro(*,db_folder,account):
-# -- (HUM) pending_rm -- def __load_account_orders__bk_pospro(*,db_folder,account):
-# -- (HUM) pending_rm -- 	return ao_u_io.load(db_dir=db_folder,account=account).df.copy()
-# -- (HUM) pending_rm -- 
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def __load_account_orders__bk_rpt(*,db_folder,account):
-# -- (HUM) pending_rm -- def __load_account_orders__bk_rpt(*,db_folder,account):
-# -- (HUM) pending_rm -- 	# -- fix -- return __load_account_orders__bk_pospro(**locals)  # old: locals missing ()
-# -- (HUM) pending_rm -- 	return __load_account_orders__bk_pospro(**locals())
 
 def __load_other_holdings_for_acct__bk_rpt(*,db_folder,account):
 	from ..oms_db import classes_io as oio
@@ -133,9 +110,6 @@ def load_daily_orders(*,db_folder,book,portf):
 	orders = orders.iloc[:,1:]
 	return orders
 
-# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def load_account_orders(*,db_folder,account):
-# -- (HUM) pending_rm -- def load_account_orders(*,db_folder,account):
-# -- (HUM) pending_rm -- 	return __load_account_orders__bk_rpt(**locals())
 
 def load_account_positions(*,db_folder,account):
 	return acctpos_u_io.load(db_dir=db_folder,account=account).df.copy()
@@ -169,51 +143,6 @@ def load_dividend(*,db_folder,strategy,book_name,details_only=False):
 	ttl_divy = dividend['amount'].sum()
 	return dividend,ttl_divy
 
-# --
-# !! (HUM) needed for read_db_path,db_path default param
-# !! (HUM) need to remove read_db_path, db_path
-# !! (HUM) replace calls depeends on read_db_path, db_path by minioms/obj/util_io calls
-# !! (HUM) ask Claude Code to add review comments
-# --
-# -- (HUM) REVIEWED;pending_rm -- from simple_func import get_syst_var
-# -- (HUM) REVIEWED;pending_rm -- db_dir = get_syst_var("db_dir")
-# --
-# --
-# --
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: SCAFFOLDING — read_db_path builds paths directly. No active callers
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: found in this file. Remove once db_path is also removed.
-# -- (HUM) REVIEWED;pending_rm -- def read_db_path(*,db_folder=db_dir,account=None,strategy=None,book_name=None):
-# -- (HUM) REVIEWED;pending_rm -- 	portf_db_dir = None
-# -- (HUM) REVIEWED;pending_rm -- 	if(book_name is not None):
-# -- (HUM) REVIEWED;pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}/{book_name}"
-# -- (HUM) REVIEWED;pending_rm -- 	elif(account is not None):
-# -- (HUM) REVIEWED;pending_rm -- 		portf_db_dir = f"{db_folder}/{account}"
-# -- (HUM) REVIEWED;pending_rm -- 	elif(strategy is not None):
-# -- (HUM) REVIEWED;pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}"
-# -- (HUM) REVIEWED;pending_rm -- 	else:
-# -- (HUM) REVIEWED;pending_rm -- 		portf_db_dir = f"{db_folder}/_tbsys_"
-# -- (HUM) REVIEWED;pending_rm -- 	# --
-# -- (HUM) REVIEWED;pending_rm -- 	return portf_db_dir
-
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: SCAFFOLDING — db_path builds paths directly. Active callers:
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW:   load_account_position_report, write_account_position_report (both below).
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: Fix: check if position_report.csv has a corresponding obj/io_utility;
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: if not, one should be created so callers can use that instead.
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: Removing db_path also removes the dependency on db_dir/get_syst_var.
-# -- (HUM) REVIEWED;pending_rm -- def db_path(*,db_folder=db_dir,account=None,strategy=None,book_name=None):
-# -- (HUM) REVIEWED;pending_rm -- 	portf_db_dir = None
-# -- (HUM) REVIEWED;pending_rm -- 	if(strategy is None and book_name is None):
-# -- (HUM) REVIEWED;pending_rm -- 		portf_db_dir = f"{db_folder}/_tbsys_"
-# -- (HUM) REVIEWED;pending_rm -- 	elif(book_name is None):
-# -- (HUM) REVIEWED;pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}"
-# -- (HUM) REVIEWED;pending_rm -- 	else:
-# -- (HUM) REVIEWED;pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}/{book_name}"
-# -- (HUM) REVIEWED;pending_rm -- 	# --
-# -- (HUM) REVIEWED;pending_rm -- 	Path(portf_db_dir).mkdir(parents=True, exist_ok=True)
-# -- (HUM) REVIEWED;pending_rm -- 	return portf_db_dir
-# --
-# --
-# --
 def compute_benchmark_value_for_portf(*,symbol,fromDate,toDate=None,ndays=None):
 	raw0 = mktprc_loader().get_eod_hist(symbol=symbol,fromDate=fromDate,toDate=toDate,ndays=ndays)
 	rtQuote = mktprc_loader().get_simple_quote([symbol])
@@ -405,24 +334,9 @@ def load_openpos_for_portf(*,db_folder,book,portf):
 def load_other_holdings_for_acct(*,db_folder,account):
 	return __load_other_holdings_for_acct__bk_rpt(**locals())
 
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: both functions below use db_path (scaffolding) to locate position_report.csv.
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: Fix: replace db_path call with a proper obj/io_utility for position_report.csv
-# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: once one exists (see db_path comment above).
-# -- (HUM) REVIEWED;pending_rm -- # (HUM) in order to replace the load_account_position_report and write_account_position_report
-# -- (HUM) REVIEWED;pending_rm -- # (HUM) I have to add a new class in minioms/oms_db/classes_io.py. Can you suggest modification on minioms/oms_db/gen_tableclasses.py?
-# -- (HUM) REVIEWED;pending_rm -- # (HUM) I will also need to create the corresponding object, io_utility, br_utility under minioms/obj/
-# -- (HUM) REVIEWED;pending_rm -- # (HUM) Can you make code change, but comment them out and label with "(HUM) NEED_REVIEW"
-# -- (HUM) REVIEWED;pending_rm -- # (HUM) I also provided a sample file for position_report.csv in the directory
-# -- (HUM) REVIEWED;pending_rm -- def load_account_position_report(*,db_folder,account):
-# -- (HUM) REVIEWED;pending_rm -- 	acct_folder= db_path(db_folder=db_folder,strategy=account)
-# -- (HUM) REVIEWED;pending_rm -- 	report = pd.read_csv(f"{acct_folder}/position_report.csv",index_col='line#')
-# -- (HUM) REVIEWED;pending_rm -- 	return report
 def load_account_position_report(*,db_folder,account):
 	return acctposrpt_u_io.load(db_dir=db_folder,account=account).df.copy()
 
-# -- (HUM) REVIEWED;pending_rm -- def write_account_position_report(*,db_folder,account,report):
-# -- (HUM) REVIEWED;pending_rm -- 	acct_folder= db_path(db_folder=db_folder,strategy=account)
-# -- (HUM) REVIEWED;pending_rm -- 	report.to_csv(f"{acct_folder}/position_report.csv",index_label='line#')
 def write_account_position_report(*,db_folder,account,report):
 	acctposrpt_u_io.save(db_dir=db_folder,account=account,report_df=report)
 
