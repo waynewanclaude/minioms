@@ -247,6 +247,9 @@ def format_report_1(df0):
 	# --
 	# --
 	# --
+	# (CLU) NEED_REVIEW: symbol_columns is computed but never used anywhere in this function.
+	# (CLU) NEED_REVIEW: The loop below re-implements the same logic inline via scol[0].isupper().
+	# (CLU) NEED_REVIEW: Fix: remove this line.
 	symbol_columns = filter(lambda cc: cc[0].isupper(), df0.columns)
 	float_columns = [ 'principle', 'dividend', 'txn balance', 'cash value', 'market value', 'total value', 'bmk mkt val', '$ alpha' ]
 	int_columns = [ 'maxpos', '#position', '#empty slot' ]
@@ -458,6 +461,11 @@ def format_all_strats_summary(df_strats):
 # --
 # --
 # --
+# (CLU) NEED_REVIEW: parse_options takes argv as a parameter but ignores it entirely,
+# (CLU) NEED_REVIEW: reading sys.argv directly instead. This works today only because
+# (CLU) NEED_REVIEW: main() always passes sys.argv, making the parameter redundant and
+# (CLU) NEED_REVIEW: misleading. Fix: replace sys.argv[1], sys.argv[2], sys.argv[3:]
+# (CLU) NEED_REVIEW: with argv[1], argv[2], argv[3:] inside the function.
 def parse_options(argv):
 	# portf = sys.argv[0].replace("merge_exec__strat1_0LPAF2_", "").replace(".py", "")
 	portf = f"strat1_0LPAF2_{sys.argv[1]}"
