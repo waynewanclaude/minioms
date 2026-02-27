@@ -98,6 +98,9 @@ def generate_orders_for_portf(*,db_folder,strategy,book_name,portf_attr):
 	# --
 	daily_orders = orders["all_orders"]
 	# --
+	# (CLU) NEED_REVIEW: read_db_path is SCAFFOLDING — last active caller in this file.
+	# (CLU) NEED_REVIEW: daily_orders_gen.csv has no _IO class. Fix: add a PortfDailyOrdersGen entry
+	# (CLU) NEED_REVIEW: in gen_tableclasses.py (filename="daily_orders_gen.csv") and use its io_utility.
 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
 	daily_orders.to_csv(f"{portf_folder}/daily_orders_gen.csv")
 	return orders
@@ -207,6 +210,9 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 	}
 
 
+# (CLU) NEED_REVIEW: openpos, dividend_txn, and **kargs are dead params — all three are always
+# (CLU) NEED_REVIEW: overwritten by loading from db, and db_folder is now required (raises ValueError).
+# (CLU) NEED_REVIEW: Fix: def portf_financial_summary(*,db_folder,strategy,book_name):
 def portf_financial_summary(*,openpos=None,dividend_txn=None,db_folder=None,strategy=None,book_name=None,**kargs):
 	if(db_folder is None):
 		raise ValueError("ERR: db_folder cannot be None")
@@ -248,7 +254,7 @@ def load_exitcond(*,db_folder,strategy,book_name,trig_only=True):
 			exitcond = exitcond[ exitcond['exit_trigger'].str.len()>0 ]
 			exitcond = exitcond[ exitcond['exit_trigger'] !="--" ]
 		else:
-			raise ValueException("Do not know how to filter exitcond")
+			raise ValueError("Do not know how to filter exitcond")
 	return exitcond
 
 def load_buylist(*,db_folder,strategy,book_name):

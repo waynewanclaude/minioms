@@ -54,7 +54,8 @@ def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	return div_txn.df.reset_index(drop=True)
 
 # !! SCAFFOLDING: read_db_path is temporary scaffolding; same function duplicated in op_gen_portf_orders.py.
-# !! TODO: remove after removing all callers (load_dividend, safe_load_account_executions).
+# (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned (see below); load_dividend's call
+# (CLU) NEED_REVIEW: is dead (portf_folder never used). Once both are fixed, remove read_db_path entirely.
 def read_db_path(*,db_folder,account=None,strategy=None,book_name=None):
 	portf_db_dir = None
 	if(book_name is not None):
@@ -120,6 +121,9 @@ def update_dividend_txn_format(txns):
 	return newfmt
 
 def load_dividend(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=True):
+	# (CLU) NEED_REVIEW: portf_folder is computed but never used — dead assignment leftover from
+	# (CLU) NEED_REVIEW: before the io_utility migration. Fix: remove this line (and the read_db_path
+	# (CLU) NEED_REVIEW: call). Once removed, read_db_path above may also be removable.
 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
 	# --
 	# -- not sure what the 'line#' column for, remove it for now
@@ -458,10 +462,15 @@ def write_symbol_to_market_pricer(*,inPos=None,tradeLst=None,index_n_ETF=None,mi
 # --
 # -- copied from bookkeeper_post_process.py
 # --
+# (CLU) NEED_REVIEW: local__load_account_executions_raw has no callers — its only caller
+# (CLU) NEED_REVIEW: (safe_load_account_executions) is itself now orphaned. Fix: remove both functions.
 # -- (HUM) no_external_ref -- def local__load_account_executions_raw(db_folder,account):
 def local__load_account_executions_raw(db_folder,account):
 	return exec_u_io.load(db_dir=db_folder,account=account).df.copy()
 
+# (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned — load_all_execs and
+# (CLU) NEED_REVIEW: _DEAD_export_execs_to_gspread (its only callers) were deleted in the last cleanup.
+# (CLU) NEED_REVIEW: Fix: remove this function and local__load_account_executions_raw above.
 # -- (HUM) no_external_ref -- def safe_load_account_executions(db_folder,account):
 def safe_load_account_executions(db_folder,account):
 	try:
