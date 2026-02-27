@@ -53,22 +53,22 @@ def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	div_txn = portfdtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
 	return div_txn.df.reset_index(drop=True)
 
-# !! SCAFFOLDING: read_db_path is temporary scaffolding; same function duplicated in op_gen_portf_orders.py.
-# (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned (see below); load_dividend's call
-# (CLU) NEED_REVIEW: is dead (portf_folder never used). Once both are fixed, remove read_db_path entirely.
-def read_db_path(*,db_folder,account=None,strategy=None,book_name=None):
-	portf_db_dir = None
-	if(book_name is not None):
-		portf_db_dir = f"{db_folder}/{strategy}/{book_name}"
-	elif(account is not None):
-		portf_db_dir = f"{db_folder}/{account}"
-	elif(strategy is not None):
-		portf_db_dir = f"{db_folder}/{strategy}"
-	else:
-		portf_db_dir = f"{db_folder}/_tbsys_"
-	# --
-	return portf_db_dir
-
+# -- (HUM) pending_rm -- # !! SCAFFOLDING: read_db_path is temporary scaffolding; same function duplicated in op_gen_portf_orders.py.
+# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned (see below); load_dividend's call
+# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: is dead (portf_folder never used). Once both are fixed, remove read_db_path entirely.
+# -- (HUM) pending_rm -- def read_db_path(*,db_folder,account=None,strategy=None,book_name=None):
+# -- (HUM) pending_rm -- 	portf_db_dir = None
+# -- (HUM) pending_rm -- 	if(book_name is not None):
+# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}/{book_name}"
+# -- (HUM) pending_rm -- 	elif(account is not None):
+# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{account}"
+# -- (HUM) pending_rm -- 	elif(strategy is not None):
+# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}"
+# -- (HUM) pending_rm -- 	else:
+# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/_tbsys_"
+# -- (HUM) pending_rm -- 	# --
+# -- (HUM) pending_rm -- 	return portf_db_dir
+# -- (HUM) pending_rm -- 
 # --
 # --
 # --
@@ -121,15 +121,15 @@ def update_dividend_txn_format(txns):
 	return newfmt
 
 def load_dividend(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=True):
-	# (CLU) NEED_REVIEW: portf_folder is computed but never used — dead assignment leftover from
-	# (CLU) NEED_REVIEW: before the io_utility migration. Fix: remove this line (and the read_db_path
-	# (CLU) NEED_REVIEW: call). Once removed, read_db_path above may also be removable.
-	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
-	# --
-	# -- not sure what the 'line#' column for, remove it for now
-	# !! might need to fix the source
-	# --
-	# -- fix -- txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)  # old: portf= should be portfolio=
+# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: portf_folder is computed but never used — dead assignment leftover from
+# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: before the io_utility migration. Fix: remove this line (and the read_db_path
+# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: call). Once removed, read_db_path above may also be removable.
+# -- (HUM) pending_rm -- 	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
+# -- (HUM) pending_rm -- 	# --
+# -- (HUM) pending_rm -- 	# -- not sure what the 'line#' column for, remove it for now
+# -- (HUM) pending_rm -- 	# !! might need to fix the source
+# -- (HUM) pending_rm -- 	# --
+# -- (HUM) pending_rm -- 	# -- fix -- txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portf=book_name)  # old: portf= should be portfolio=
 	txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
 	if(is_old_dividend_txn_format(txns)):
 		txns = update_dividend_txn_format(txns)
@@ -459,27 +459,27 @@ def write_symbol_to_market_pricer(*,inPos=None,tradeLst=None,index_n_ETF=None,mi
 	)
 
 
-# --
-# -- copied from bookkeeper_post_process.py
-# --
-# (CLU) NEED_REVIEW: local__load_account_executions_raw has no callers — its only caller
-# (CLU) NEED_REVIEW: (safe_load_account_executions) is itself now orphaned. Fix: remove both functions.
-# -- (HUM) no_external_ref -- def local__load_account_executions_raw(db_folder,account):
-def local__load_account_executions_raw(db_folder,account):
-	return exec_u_io.load(db_dir=db_folder,account=account).df.copy()
-
-# (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned — load_all_execs and
-# (CLU) NEED_REVIEW: _DEAD_export_execs_to_gspread (its only callers) were deleted in the last cleanup.
-# (CLU) NEED_REVIEW: Fix: remove this function and local__load_account_executions_raw above.
-# -- (HUM) no_external_ref -- def safe_load_account_executions(db_folder,account):
-def safe_load_account_executions(db_folder,account):
-	try:
-		acct_execs = local__load_account_executions_raw(db_folder, account)
-		return acct_execs
-	except Exception as ex:
-		print(f"WARN/INGORNED:{account}:{ex}")
-		return pd.DataFrame(columns='Symbol,Shares,Price,Amount'.split(','))
-
+# -- (HUM) pending_rm -- # --
+# -- (HUM) pending_rm -- # -- copied from bookkeeper_post_process.py
+# -- (HUM) pending_rm -- # --
+# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: local__load_account_executions_raw has no callers — its only caller
+# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: (safe_load_account_executions) is itself now orphaned. Fix: remove both functions.
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def local__load_account_executions_raw(db_folder,account):
+# -- (HUM) pending_rm -- def local__load_account_executions_raw(db_folder,account):
+# -- (HUM) pending_rm -- 	return exec_u_io.load(db_dir=db_folder,account=account).df.copy()
+# -- (HUM) pending_rm -- 
+# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: safe_load_account_executions is now orphaned — load_all_execs and
+# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: _DEAD_export_execs_to_gspread (its only callers) were deleted in the last cleanup.
+# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: Fix: remove this function and local__load_account_executions_raw above.
+# -- (HUM) pending_rm -- # -- (HUM) no_external_ref -- def safe_load_account_executions(db_folder,account):
+# -- (HUM) pending_rm -- def safe_load_account_executions(db_folder,account):
+# -- (HUM) pending_rm -- 	try:
+# -- (HUM) pending_rm -- 		acct_execs = local__load_account_executions_raw(db_folder, account)
+# -- (HUM) pending_rm -- 		return acct_execs
+# -- (HUM) pending_rm -- 	except Exception as ex:
+# -- (HUM) pending_rm -- 		print(f"WARN/INGORNED:{account}:{ex}")
+# -- (HUM) pending_rm -- 		return pd.DataFrame(columns='Symbol,Shares,Price,Amount'.split(','))
+# -- (HUM) pending_rm -- 
 
 # --
 # -- Example usage (assuming `workbook` is a gspread spreadsheet object)
