@@ -5,9 +5,14 @@ import sys
 import os 
 
 # !!
-# !! this is a bad idea, possible solution, 
-# !! publish the library (oms) as a package 
+# !! this is a bad idea, possible solution,
+# !! publish the library (oms) as a package
 # !!
+# (CLU) NEED_REVIEW: sys.path.append at module level is an import-time side effect and
+# (CLU) NEED_REVIEW: fragile (relies on relative directory traversal). The same pattern
+# (CLU) NEED_REVIEW: exists in op_gen_portf_orders.py and was removed there.
+# (CLU) NEED_REVIEW: Fix: publish minioms as a proper package (as the !! note above suggests),
+# (CLU) NEED_REVIEW: then remove these four lines and the sys/os imports if no longer needed.
 __abspath = os.path.abspath(__file__)
 __dirname = os.path.dirname(__abspath)
 common_dir = f"{__dirname}/../../../../../common"
@@ -240,6 +245,9 @@ def load_report_for_book(*,db_folder,strategy,market):
 	return df0
 
 def format_report_1(df0):
+	# (CLU) NEED_REVIEW: six consecutive # -- blank comment lines (three before and three
+	# (CLU) NEED_REVIEW: after pd.set_option) are noise left over from removed code.
+	# (CLU) NEED_REVIEW: Fix: reduce each group to a single # --.
 	# --
 	# --
 	# --

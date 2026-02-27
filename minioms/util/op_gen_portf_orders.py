@@ -12,6 +12,10 @@ import datetime
 import pandas as pd
 import numpy as np
 
+# (CLU) NEED_REVIEW: load_required_objects has no visible callers in this codebase.
+# (CLU) NEED_REVIEW: It overlaps with load_portf_data below but returns raw io objects
+# (CLU) NEED_REVIEW: rather than unpacked DataFrames. Verify no external callers exist,
+# (CLU) NEED_REVIEW: then remove if orphaned.
 class op_gen_portf_orders:
 	def load_required_objects(*,db_dir,strategy,portfolio):
 		types_validate(db_dir,msg="db_dir",types=[ type("") ],allow_none=False)
@@ -33,6 +37,8 @@ class op_gen_portf_orders:
 # -- ----------------------------------------------------------------------------
 # -- code copy from bookkeeper_daily_orders.py (no longer exist)
 # -- ----------------------------------------------------------------------------
+# (CLU) NEED_REVIEW: pprint import is mid-file — inconsistent with top-of-file imports above.
+# (CLU) NEED_REVIEW: Fix: move to top-of-file import block.
 from pprint import pprint
 
 def get_portf_attr(portf):
@@ -114,7 +120,7 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 	maxpos = portf_basic_info['maxpos']
 	n_open_pos = portf_summary['#openpos']
 	ttl_div = portf_summary['dividend_val']
-	ttl_mkt_val = portf_summary['market_value']
+	ttl_mkt_val = portf_summary['market_value']  # (CLU) NEED_REVIEW: only used in a debug print below, never in any computation; consider removing
 	ttl_cost = portf_summary['total_cost']
 	exitorders_mkt_val = -(exitorders['unit']*exitorders['price']).sum()
 	# -- 
