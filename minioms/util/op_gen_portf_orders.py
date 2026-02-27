@@ -9,6 +9,7 @@ from ..obj.PortfDividendTxns import br_utility as portfdtxns_br
 from ..obj.PairedTxns import io_utility as pairedtxns_io
 from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
+from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
 from jackutil.microfunc import types_validate
 from jackutil.microfunc import dt_to_str,str_to_dt,retry
 import jackutil.containerutil as cutil
@@ -45,22 +46,7 @@ import sys
 import os 
 import re
 
-# -- (HUM) pending_rm -- # !! SCAFFOLDING: read_db_path is temporary scaffolding; same function duplicated in helper_export_to_gspread.py.
-# -- (HUM) pending_rm -- # !! TODO: remove after removing all callers (generate_orders_for_portf, load_exitcond).
-# -- (HUM) pending_rm -- # !! Callers should derive the path via the obj/io_utility layer instead of building it directly.
-# -- (HUM) pending_rm -- def read_db_path(*,db_folder=None,account=None,strategy=None,book_name=None):
-# -- (HUM) pending_rm -- 	portf_db_dir = None
-# -- (HUM) pending_rm -- 	if(book_name is not None):
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}/{book_name}"
-# -- (HUM) pending_rm -- 	elif(account is not None):
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{account}"
-# -- (HUM) pending_rm -- 	elif(strategy is not None):
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/{strategy}"
-# -- (HUM) pending_rm -- 	else:
-# -- (HUM) pending_rm -- 		portf_db_dir = f"{db_folder}/_tbsys_"
-# -- (HUM) pending_rm -- 	# --
-# -- (HUM) pending_rm -- 	return portf_db_dir
-# -- (HUM) pending_rm -- 
+
 
 def get_portf_attr(portf):
 	portf_attr = portf.get('portf_attr',[])
@@ -97,14 +83,7 @@ def generate_orders_for_portf(*,db_folder,strategy,book_name,portf_attr):
 	# --
 	daily_orders = orders["all_orders"]
 	# --
-# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: read_db_path is SCAFFOLDING — last active caller in this file.
-# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: daily_orders_gen.csv has no _IO class. Fix: add a PortfDailyOrdersGen entry
-# -- (HUM) pending_rm -- 	# (CLU) NEED_REVIEW: in gen_tableclasses.py (filename="daily_orders_gen.csv") and use its io_utility.
-	# --
-	# -- replace the following code with existing minioms obj (I think it should be AcctDailyOrders, verify before replace)
-	# --
-	portf_folder = read_db_path(db_folder=db_folder,strategy=strategy,book_name=book_name)
-	daily_orders.to_csv(f"{portf_folder}/daily_orders.csv")
+	portfdord_u_io.save(db_dir=db_folder, strategy=strategy, portfolio=book_name, df0=daily_orders)
 	return orders
 
 def load_portf_data(*,db_folder,strategy,book_name):
@@ -212,13 +191,7 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 	}
 
 
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: openpos, dividend_txn, and **kargs are dead params — all three are always
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: overwritten by loading from db, and db_folder is now required (raises ValueError).
-# -- (HUM) pending_rm -- # (CLU) NEED_REVIEW: Fix: def portf_financial_summary(*,db_folder,strategy,book_name):
-# -- (HUM) pending_rm -- # (HUM) no external ref -- def portf_financial_summary(*,openpos=None,dividend_txn=None,db_folder=None,strategy=None,book_name=None,**kargs):
-def portf_financial_summary(*,db_folder=None,strategy=None,book_name=None):
-	if(db_folder is None):
-		raise ValueError("ERR: db_folder cannot be None")
+def portf_financial_summary(*,db_folder,strategy,book_name):
 	# --
 	paired_txn = load_paired_txn(db_folder=db_folder, strategy=strategy,book_name=book_name)
 	openpos = load_openpos(db_folder=db_folder, strategy=strategy,book_name=book_name)
