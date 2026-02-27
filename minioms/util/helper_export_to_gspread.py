@@ -30,15 +30,14 @@ def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	return div_txn.df.reset_index(drop=True)
 
 # --
-# --
+# -- ref internally
 # --
 def open_workbook(svc_cred_fname,wb_name):
 	return gsu.authenticate_and_open_tradebook(svc_cred_fname, wb_name)
 
-# (CLU) NEED_REVIEW: open_workbook2 has no callers in this file and no visible external
-# (CLU) NEED_REVIEW: callers in the codebase. It accepts a gs_client object rather than
-# (CLU) NEED_REVIEW: credentials, suggesting it was an alternative to open_workbook for
-# (CLU) NEED_REVIEW: pre-authenticated clients. Fix: verify no external callers, then remove.
+# --
+# -- ref externally
+# --
 def open_workbook2(gs_client, wb_name):
 	return retry(
 		lambda : gs_client.open(wb_name),
@@ -69,22 +68,13 @@ def load_paired_txns(*,db_folder,strategy,book_name,details_only=False,drop_cash
 	return txns,balance
 
 
-# -- (HUM)
-# -- (HUM) unfold __load_open_positions__bk_exp_gsp into load_open_positions
-# -- (HUM)
-# (CLU) NEED_REVIEW: __load_open_positions__bk_exp_gsp is a one-liner with a single caller
-# (CLU) NEED_REVIEW: (load_open_positions). Fix: inline the body into load_open_positions
-# (CLU) NEED_REVIEW: and remove __load_open_positions__bk_exp_gsp entirely.
 # --
 # -- strategy = books.xml:/*/wb_name
 # -- book_name = books.xml:/*/sh_name
 # --
-def __load_open_positions__bk_exp_gsp(*,db_folder,strategy,portfolio):
-	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
-	return openpos.df.reset_index(drop=True)
-
 def load_open_positions(*,db_folder,strategy,book_name):
-	return __load_open_positions__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
+	openpos = portfpos_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name)
+	return openpos.df.reset_index(drop=True)
 
 def is_old_dividend_txn_format(txns):
 	return "unit" not in txns.columns
