@@ -7,7 +7,8 @@ from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
 from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
 from jackutil.microfunc import types_validate
-from jackutil.microfunc import dt_to_str,retry
+from jackutil.microfunc import dt_to_str
+from .external_interface import load_market_price
 import datetime
 import pandas as pd
 import numpy as np
@@ -25,13 +26,10 @@ class op_gen_portf_orders:
 		types_validate(portfolio,msg="portfolio",types=[ type("") ],allow_none=False)
 		# --
 		portf_settings = portfset_io.load(db_dir=db_dir,strategy=strategy,portfolio=portfolio)
-		# (CLU) NEED_REVIEW: the four calls below use positional arguments, inconsistent with
-		# (CLU) NEED_REVIEW: every other io call in this file which uses keyword arguments.
-		# (CLU) NEED_REVIEW: Fix: change to db_dir=db_dir, strategy=strategy, portfolio=portfolio.
-		open_pos = portfpos_io.load(db_dir,strategy,portfolio)
-		exitconds = exitconds_io.load(db_dir,strategy,portfolio)
-		buylist = buylist_io.load(db_dir,strategy,portfolio)
-		dtxns = portfdtxns_io.load(db_dir,strategy,portfolio)
+		open_pos = portfpos_io.load(db_dir=db_dir,strategy=strategy,portfolio=portfolio)
+		exitconds = exitconds_io.load(db_dir=db_dir,strategy=strategy,portfolio=portfolio)
+		buylist = buylist_io.load(db_dir=db_dir,strategy=strategy,portfolio=portfolio)
+		dtxns = portfdtxns_io.load(db_dir=db_dir,strategy=strategy,portfolio=portfolio)
 		# --
 		return portf_settings,open_pos,exitconds,buylist,dtxns
 
@@ -220,37 +218,6 @@ def load_exitcond(*,db_folder,strategy,book_name,trig_only=True):
 def load_buylist(*,db_folder,strategy,book_name):
 	return buylist_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 
-# (CLU) NEED_REVIEW: load_market_price_impl and load_market_price below are nearly identical
-# (CLU) NEED_REVIEW: to the same-named functions in helper_report.py. The only differences are:
-# (CLU) NEED_REVIEW:   - mktprc_loader is imported inline here vs at module level in helper_report.py
-# (CLU) NEED_REVIEW:   - helper_report.py's load_market_price has an explicit cache={} and clear_cache param
-# (CLU) NEED_REVIEW:   - helper_report.py's debug print is commented out; here it is active
-# (CLU) NEED_REVIEW: Fix: extract both into a shared utility (e.g. external_interface or a new helper),
-# (CLU) NEED_REVIEW: then import from there in both files. Prefer helper_report.py's signature
-# (CLU) NEED_REVIEW: (explicit cache param) as the canonical form.
-def load_market_price_impl(req_symbols,cached_data={}):
-	# --
-	from .external_interface import mktprc_loader
-	# --
-	missing_symbols = req_symbols - cached_data.keys()
-	if(len(missing_symbols)>0):
-		print(f"missing_symbols:{missing_symbols}")
-		price_data = retry(
-			lambda : mktprc_loader().get_simple_quote(missing_symbols),
-			retry=10, pause=5, rtnEx=False, silent = False,
-		)
-		cached_data.update({ ii['symbol'] : ii for ii in price_data })
-	result = [ cached_data[sym] for sym in set(req_symbols) ]
-	return result
-
-def load_market_price(somepos):
-	symbols = somepos['symbol'].to_list()
-	if(len(symbols)==0):
-		symbols = ["QQQ"]
-	price_data = load_market_price_impl(symbols)
-	price_data = pd.DataFrame(price_data).set_index('symbol',drop=True)
-	somepos = somepos.join(other=price_data['price'], on="symbol", how="left")
-	return somepos
 
 def load_dividend(*,db_folder,strategy,book_name):
 	div_txn = portfdtxns_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()

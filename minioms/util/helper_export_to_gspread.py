@@ -21,18 +21,6 @@ from ..obj.AcctPositions import io_utility as acctpos_u_io
 import os 
 from datetime import datetime
 
-# (CLU) NEED_REVIEW: __load_portf_div_txns__bk_exp_gsp is the same single-caller wrapper
-# (CLU) NEED_REVIEW: pattern as __load_open_positions__bk_exp_gsp (just inlined). Its only
-# (CLU) NEED_REVIEW: caller is load_dividend below. Fix: inline the body into load_dividend
-# (CLU) NEED_REVIEW: and remove this function.
-def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
-	# --
-	# -- not sure what the 'line#' column for, remove it for now
-	# !! might need to fix the source
-	# --
-	div_txn = portfdtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=portfolio)
-	return div_txn.df.reset_index(drop=True)
-
 # --
 # -- ref internally
 # --
@@ -93,7 +81,10 @@ def update_dividend_txn_format(txns):
 	return newfmt
 
 def load_dividend(*,db_folder,strategy,book_name,details_only=False,drop_cash_txn=True):
-	txns = __load_portf_div_txns__bk_exp_gsp(db_folder=db_folder,strategy=strategy,portfolio=book_name)
+	# -- not sure what the 'line#' column for, remove it for now
+	# !! might need to fix the source
+	div_txn = portfdtxns_u_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name)
+	txns = div_txn.df.reset_index(drop=True)
 	if(is_old_dividend_txn_format(txns)):
 		txns = update_dividend_txn_format(txns)
 	if(drop_cash_txn):

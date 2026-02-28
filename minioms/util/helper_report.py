@@ -2,11 +2,10 @@ import locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
 # --
 import sys
-# (CLU) NEED_REVIEW: os is only used by the sys.path.append scaffolding block below
-# (CLU) NEED_REVIEW: (marked REVIEWED;pending_rm). Once that block is removed, os
-# (CLU) NEED_REVIEW: becomes an orphaned import and should be removed alongside it.
-import os
-
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: os is only used by the sys.path.append scaffolding block below
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: (marked REVIEWED;pending_rm). Once that block is removed, os
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: becomes an orphaned import and should be removed alongside it.
+# -- (HUM) REVIEWED;pending_rm -- import os
 # -- (HUM) REVIEWED;pending_rm -- # !!
 # -- (HUM) REVIEWED;pending_rm -- # !! this is a bad idea, possible solution,
 # -- (HUM) REVIEWED;pending_rm -- # !! publish the library (oms) as a package
@@ -28,10 +27,9 @@ pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.expand_frame_repr', False)
-from jackutil.microfunc import retry
 # --
 import re
-from .external_interface import mktprc_loader
+from .external_interface import mktprc_loader, load_market_price, load_market_price_impl
 from itertools import product
 from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
@@ -73,45 +71,15 @@ def check_version(book_version,version):
 		raise Exception(f"book version is {book_version}; require version is {version} or above")
 	print(f"book version is {book_version}; require version is {version} or above")
 
-# (CLU) NEED_REVIEW: load_market_price_impl and load_market_price below are nearly identical
-# (CLU) NEED_REVIEW: to the same-named functions in op_gen_portf_orders.py. The only differences are:
-# (CLU) NEED_REVIEW:   - mktprc_loader is imported at module level here vs inline in op_gen_portf_orders.py
-# (CLU) NEED_REVIEW:   - load_market_price here has an explicit cache={} and clear_cache param (preferred)
-# (CLU) NEED_REVIEW:   - the debug print is commented out here; it is active in op_gen_portf_orders.py
-# (CLU) NEED_REVIEW: Fix: extract both into a shared utility (e.g. external_interface or a new helper),
-# (CLU) NEED_REVIEW: then import from there in both files. The signature here is the canonical form.
-def load_market_price_impl(req_symbols,cached_data={}):
-	missing_symbols = req_symbols - cached_data.keys()
-	if(len(missing_symbols)>0):
-		# -- debug -- print(f"missing_symbols:{missing_symbols}")
-		price_data = retry(
-			lambda : mktprc_loader().get_simple_quote(missing_symbols),
-			retry=10, pause=5, rtnEx=False, silent = False,
-		)
-		cached_data.update({ ii['symbol'] : ii for ii in price_data })
-	result = [ cached_data[sym] for sym in set(req_symbols) ]
-	return result
-
-def load_market_price(somepos,cache={},clear_cache=False):
-	if(clear_cache):
-		cache.clear()
-		return None
-	symbols = somepos['symbol'].to_list()
-	if(len(symbols)==0):
-		symbols = ["QQQ"]
-	price_data = load_market_price_impl(symbols,cache)
-	price_data = pd.DataFrame(price_data).set_index('symbol',drop=True)
-	somepos = somepos.join(other=price_data['price'], on="symbol", how="left")
-	return somepos
 
 def load_tbsys_accounts(*,db_folder):
 	return acct_u_io.load(db_dir=db_folder).df.copy()
 
-# (CLU) NEED_REVIEW: load_tbsys_books has no callers in the util directory.
-# (CLU) NEED_REVIEW: Verify whether it is called externally (e.g. notebooks, scripts).
-# (CLU) NEED_REVIEW: If not, remove it and the books_u_io import.
-def load_tbsys_books(*,db_folder):
-	return books_u_io.load(db_dir=db_folder).df.copy()
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: load_tbsys_books has no callers in the util directory.
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: Verify whether it is called externally (e.g. notebooks, scripts).
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: If not, remove it and the books_u_io import.
+# -- (HUM) REVIEWED;pending_rm -- def load_tbsys_books(*,db_folder):
+# -- (HUM) REVIEWED;pending_rm -- 	return books_u_io.load(db_dir=db_folder).df.copy()
 
 def load_tbsys_portfs(*,db_folder):
 	return portfs_u_io.load(db_dir=db_folder).df.copy()
