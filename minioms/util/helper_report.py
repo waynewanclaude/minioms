@@ -2,21 +2,24 @@ import locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
 # --
 import sys
-import os 
+# (CLU) NEED_REVIEW: os is only used by the sys.path.append scaffolding block below
+# (CLU) NEED_REVIEW: (marked REVIEWED;pending_rm). Once that block is removed, os
+# (CLU) NEED_REVIEW: becomes an orphaned import and should be removed alongside it.
+import os
 
-# !!
-# !! this is a bad idea, possible solution,
-# !! publish the library (oms) as a package
-# !!
-# (CLU) NEED_REVIEW: sys.path.append at module level is an import-time side effect and
-# (CLU) NEED_REVIEW: fragile (relies on relative directory traversal). The same pattern
-# (CLU) NEED_REVIEW: exists in op_gen_portf_orders.py and was removed there.
-# (CLU) NEED_REVIEW: Fix: publish minioms as a proper package (as the !! note above suggests),
-# (CLU) NEED_REVIEW: then remove these four lines and the sys/os imports if no longer needed.
-__abspath = os.path.abspath(__file__)
-__dirname = os.path.dirname(__abspath)
-common_dir = f"{__dirname}/../../../../../common"
-sys.path.append(f"{common_dir}/lib/quick_func")
+# -- (HUM) REVIEWED;pending_rm -- # !!
+# -- (HUM) REVIEWED;pending_rm -- # !! this is a bad idea, possible solution,
+# -- (HUM) REVIEWED;pending_rm -- # !! publish the library (oms) as a package
+# -- (HUM) REVIEWED;pending_rm -- # !!
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: sys.path.append at module level is an import-time side effect and
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: fragile (relies on relative directory traversal). The same pattern
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: exists in op_gen_portf_orders.py and was removed there.
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: Fix: publish minioms as a proper package (as the !! note above suggests),
+# -- (HUM) REVIEWED;pending_rm -- # (CLU) NEED_REVIEW: then remove these four lines and the sys/os imports if no longer needed.
+# -- (HUM) REVIEWED;pending_rm -- __abspath = os.path.abspath(__file__)
+# -- (HUM) REVIEWED;pending_rm -- __dirname = os.path.dirname(__abspath)
+# -- (HUM) REVIEWED;pending_rm -- common_dir = f"{__dirname}/../../../../../common"
+# -- (HUM) REVIEWED;pending_rm -- sys.path.append(f"{common_dir}/lib/quick_func")
 # --
 import pandas as pd
 import numpy as np
@@ -70,6 +73,13 @@ def check_version(book_version,version):
 		raise Exception(f"book version is {book_version}; require version is {version} or above")
 	print(f"book version is {book_version}; require version is {version} or above")
 
+# (CLU) NEED_REVIEW: load_market_price_impl and load_market_price below are nearly identical
+# (CLU) NEED_REVIEW: to the same-named functions in op_gen_portf_orders.py. The only differences are:
+# (CLU) NEED_REVIEW:   - mktprc_loader is imported at module level here vs inline in op_gen_portf_orders.py
+# (CLU) NEED_REVIEW:   - load_market_price here has an explicit cache={} and clear_cache param (preferred)
+# (CLU) NEED_REVIEW:   - the debug print is commented out here; it is active in op_gen_portf_orders.py
+# (CLU) NEED_REVIEW: Fix: extract both into a shared utility (e.g. external_interface or a new helper),
+# (CLU) NEED_REVIEW: then import from there in both files. The signature here is the canonical form.
 def load_market_price_impl(req_symbols,cached_data={}):
 	missing_symbols = req_symbols - cached_data.keys()
 	if(len(missing_symbols)>0):
@@ -97,6 +107,9 @@ def load_market_price(somepos,cache={},clear_cache=False):
 def load_tbsys_accounts(*,db_folder):
 	return acct_u_io.load(db_dir=db_folder).df.copy()
 
+# (CLU) NEED_REVIEW: load_tbsys_books has no callers in the util directory.
+# (CLU) NEED_REVIEW: Verify whether it is called externally (e.g. notebooks, scripts).
+# (CLU) NEED_REVIEW: If not, remove it and the books_u_io import.
 def load_tbsys_books(*,db_folder):
 	return books_u_io.load(db_dir=db_folder).df.copy()
 
@@ -245,15 +258,8 @@ def load_report_for_book(*,db_folder,strategy,market):
 	return df0
 
 def format_report_1(df0):
-	# (CLU) NEED_REVIEW: six consecutive # -- blank comment lines (three before and three
-	# (CLU) NEED_REVIEW: after pd.set_option) are noise left over from removed code.
-	# (CLU) NEED_REVIEW: Fix: reduce each group to a single # --.
-	# --
-	# --
 	# --
 	pd.set_option('future.no_silent_downcasting', True)
-	# --
-	# --
 	# --
 	float_columns = [ 'principle', 'dividend', 'txn balance', 'cash value', 'market value', 'total value', 'bmk mkt val', '$ alpha' ]
 	int_columns = [ 'maxpos', '#position', '#empty slot' ]

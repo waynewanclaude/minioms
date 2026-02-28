@@ -21,6 +21,10 @@ from ..obj.AcctPositions import io_utility as acctpos_u_io
 import os 
 from datetime import datetime
 
+# (CLU) NEED_REVIEW: __load_portf_div_txns__bk_exp_gsp is the same single-caller wrapper
+# (CLU) NEED_REVIEW: pattern as __load_open_positions__bk_exp_gsp (just inlined). Its only
+# (CLU) NEED_REVIEW: caller is load_dividend below. Fix: inline the body into load_dividend
+# (CLU) NEED_REVIEW: and remove this function.
 def __load_portf_div_txns__bk_exp_gsp(*,db_folder,strategy,portfolio):
 	# --
 	# -- not sure what the 'line#' column for, remove it for now

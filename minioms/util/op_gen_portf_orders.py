@@ -11,18 +11,23 @@ from jackutil.microfunc import dt_to_str,retry
 import datetime
 import pandas as pd
 import numpy as np
+from pprint import pprint
 
-# (CLU) NEED_REVIEW: load_required_objects has no visible callers in this codebase.
-# (CLU) NEED_REVIEW: It overlaps with load_portf_data below but returns raw io objects
-# (CLU) NEED_REVIEW: rather than unpacked DataFrames. Verify no external callers exist,
-# (CLU) NEED_REVIEW: then remove if orphaned.
 class op_gen_portf_orders:
+	# (HUM)
+	# (HUM) TODO: keep this, and investigate
+	# (HUM) TODO: There must be an explaination for it to be here
+	# (HUM) TODO: ?? Maybe part of an incompleted task ??
+	# (HUM)
 	def load_required_objects(*,db_dir,strategy,portfolio):
 		types_validate(db_dir,msg="db_dir",types=[ type("") ],allow_none=False)
 		types_validate(strategy,msg="strategy",types=[ type("") ],allow_none=False)
 		types_validate(portfolio,msg="portfolio",types=[ type("") ],allow_none=False)
 		# --
 		portf_settings = portfset_io.load(db_dir=db_dir,strategy=strategy,portfolio=portfolio)
+		# (CLU) NEED_REVIEW: the four calls below use positional arguments, inconsistent with
+		# (CLU) NEED_REVIEW: every other io call in this file which uses keyword arguments.
+		# (CLU) NEED_REVIEW: Fix: change to db_dir=db_dir, strategy=strategy, portfolio=portfolio.
 		open_pos = portfpos_io.load(db_dir,strategy,portfolio)
 		exitconds = exitconds_io.load(db_dir,strategy,portfolio)
 		buylist = buylist_io.load(db_dir,strategy,portfolio)
@@ -37,10 +42,6 @@ class op_gen_portf_orders:
 # -- ----------------------------------------------------------------------------
 # -- code copy from bookkeeper_daily_orders.py (no longer exist)
 # -- ----------------------------------------------------------------------------
-# (CLU) NEED_REVIEW: pprint import is mid-file — inconsistent with top-of-file imports above.
-# (CLU) NEED_REVIEW: Fix: move to top-of-file import block.
-from pprint import pprint
-
 def get_portf_attr(portf):
 	portf_attr = portf.get('portf_attr',[])
 	if(type(portf_attr)==type([])):
@@ -120,7 +121,6 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 	maxpos = portf_basic_info['maxpos']
 	n_open_pos = portf_summary['#openpos']
 	ttl_div = portf_summary['dividend_val']
-	ttl_mkt_val = portf_summary['market_value']  # (CLU) NEED_REVIEW: only used in a debug print below, never in any computation; consider removing
 	ttl_cost = portf_summary['total_cost']
 	exitorders_mkt_val = -(exitorders['unit']*exitorders['price']).sum()
 	# -- 
@@ -143,7 +143,7 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 		cash_per_slot = 0
 	print(" # 	portf_attr", portf_attr)
 	print(" # 	maxpos", maxpos)
-	print(" # 	ttl_mkt_val", ttl_mkt_val)
+	print(" # 	ttl_mkt_val", portf_summary['market_value'] )
 	print(" # 	cash_for_trade", cash_for_trade)
 	print(" # 	n_empty_slot", n_empty_slot)
 	print(" # 	cash_per_slot", cash_per_slot)
@@ -220,6 +220,14 @@ def load_exitcond(*,db_folder,strategy,book_name,trig_only=True):
 def load_buylist(*,db_folder,strategy,book_name):
 	return buylist_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 
+# (CLU) NEED_REVIEW: load_market_price_impl and load_market_price below are nearly identical
+# (CLU) NEED_REVIEW: to the same-named functions in helper_report.py. The only differences are:
+# (CLU) NEED_REVIEW:   - mktprc_loader is imported inline here vs at module level in helper_report.py
+# (CLU) NEED_REVIEW:   - helper_report.py's load_market_price has an explicit cache={} and clear_cache param
+# (CLU) NEED_REVIEW:   - helper_report.py's debug print is commented out; here it is active
+# (CLU) NEED_REVIEW: Fix: extract both into a shared utility (e.g. external_interface or a new helper),
+# (CLU) NEED_REVIEW: then import from there in both files. Prefer helper_report.py's signature
+# (CLU) NEED_REVIEW: (explicit cache param) as the canonical form.
 def load_market_price_impl(req_symbols,cached_data={}):
 	# --
 	from .external_interface import mktprc_loader
