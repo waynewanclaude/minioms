@@ -1,4 +1,4 @@
-def print_obj(obj):
+def print_oms_io_objects(obj):
 	if(isinstance(obj, dict)):
 		for key, val in obj.items():
 			print(f"[{key}] {val.full_path}")

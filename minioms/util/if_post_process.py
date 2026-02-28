@@ -1,6 +1,6 @@
 from .op_exec_match import op_exec_match
 from .op_alloc_exec import op_alloc_exec
-from .helper_debug import print_obj
+from .helper_debug import print_oms_io_objects
 
 def post_process_account(db_dir,account,auto_commit=True):
 	# --
@@ -12,7 +12,7 @@ def post_process_account(db_dir,account,auto_commit=True):
 		op_exec_match.validate(matching_results)
 	except Exception:
 		for obj in objects_for_match:
-			print_obj(obj)
+			print_oms_io_objects(obj)
 		raise
 	if(auto_commit):
 		op_exec_match.commit_result(matching_results)
@@ -26,7 +26,7 @@ def post_process_account(db_dir,account,auto_commit=True):
 		op_alloc_exec.validate(alloc_results)
 	except Exception:
 		for obj in objects_for_post:
-			print_obj(obj)
+			print_oms_io_objects(obj)
 		raise
 	if(auto_commit):
 		op_alloc_exec.commit_result(alloc_results)
