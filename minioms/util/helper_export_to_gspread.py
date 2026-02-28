@@ -449,7 +449,6 @@ def get_gsheet_last_update_time(workbook,sheet_name):
 # -- into a single csv files with the same columns
 # -- over write the old single csv if any of the source files is newer
 # --
-
 def convert_columns_to_string(df):
 	for col in df.columns:
 		if not pd.api.types.is_numeric_dtype(df[col]) and not pd.api.types.is_datetime64_any_dtype(df[col]):
@@ -458,6 +457,8 @@ def convert_columns_to_string(df):
 			df[col] = df[col].fillna('').replace({'nan': '', 'NaN': ''})
 	return df
 
+# (HUM) indirect external ref
+# (HUM) local ref
 def merge_csv_files_as_df(*, directories, fname):
 	all_data = []
 	max_last_mod_time = None
@@ -474,10 +475,14 @@ def merge_csv_files_as_df(*, directories, fname):
 					max_last_mod_time = max(last_mod_time,max_last_mod_time)
 					subdir_name = os.path.basename(subdir)
 					dir_name = os.path.basename(directory)
-					# (CLU) NEED_REVIEW: pd.read_csv called directly, bypassing oms_db abstraction.
-				# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
-				# (CLU) NEED_REVIEW: wrap the read, passing full_path=file_path. This keeps all
-				# (CLU) NEED_REVIEW: CSV I/O inside the oms_db layer.
+# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: pd.read_csv called directly, bypassing oms_db abstraction.
+# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
+# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: wrap the read, passing full_path=file_path. This keeps all
+# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: CSV I/O inside the oms_db layer.
+				# (HUM) in this case, I am export the files as csv (concate them and write to 
+				# (HUM) google spreadsheet) In a way, I am not treating them as data, but raw
+				# (HUM) files. Let me know if this is a strong enough reason to by pass the 
+				# (HUM) object I/O interface.
 				file_df = pd.read_csv(file_path)
 					file_df.insert(0, 'Subdirectory', subdir_name)
 					file_df.insert(0, 'Directory', dir_name)
@@ -496,95 +501,122 @@ def merge_csv_files_as_df(*, directories, fname):
 	# print(f"fname:{fname}; max_last_mod_time:{max_last_mod_time};")
 	return { "fname" : fname, "df" : combined_df, "max_last_mod_time" : max_last_mod_time }
 
-# -- ----------------------------------------------------
-# -- with_chk -------------------------------------------
-# -- ----------------------------------------------------
-def merged_csv_files_save_db(*, destination, merge_res=None):
-	max_last_mod_time = merge_res['max_last_mod_time']
-	combined_df = merge_res['df']
-	fname = merge_res['fname']
-	destination_fname = f'{destination}/{fname}'
-	# --
-	last_update_time_logged = datetime.fromtimestamp(1)
-	if(os.path.exists(destination_fname)):
-		last_update_time_logged = datetime.fromtimestamp(os.path.getmtime(destination_fname))
-	# --
-	# -- check if the data is newer than last export
-	# --
-	updated = False
-	if(max_last_mod_time and last_update_time_logged):
-		if(max_last_mod_time > last_update_time_logged):
-			updated = True
-	elif(max_last_mod_time and not last_update_time_logged):
-		updated = True
-	# --
-	# -- update only when the file is newer
-	# --
-	if(updated):
-		# (CLU) NEED_REVIEW: to_csv called directly, bypassing oms_db abstraction.
-		# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
-		# (CLU) NEED_REVIEW: wrap the write, passing full_path=destination_fname and df0=combined_df.
-		# (CLU) NEED_REVIEW: This keeps all CSV I/O inside the oms_db layer.
-		combined_df.to_csv(destination_fname,index=False,float_format="%0.0f")
-	return { "dest" : destination_fname, "file_updated" : updated, "file_last_update_time" : last_update_time_logged }
+# -- (HUM) REVIEWED;pending_rm -- # -- ----------------------------------------------------
+# -- (HUM) REVIEWED;pending_rm -- # -- with_chk -------------------------------------------
+# -- (HUM) REVIEWED;pending_rm -- # -- ----------------------------------------------------
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) *** NO *** external ref
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) local ref
+# -- (HUM) REVIEWED;pending_rm -- def merged_csv_files_save_db(*, destination, merge_res=None):
+# -- (HUM) REVIEWED;pending_rm -- 	max_last_mod_time = merge_res['max_last_mod_time']
+# -- (HUM) REVIEWED;pending_rm -- 	combined_df = merge_res['df']
+# -- (HUM) REVIEWED;pending_rm -- 	fname = merge_res['fname']
+# -- (HUM) REVIEWED;pending_rm -- 	destination_fname = f'{destination}/{fname}'
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	last_update_time_logged = datetime.fromtimestamp(1)
+# -- (HUM) REVIEWED;pending_rm -- 	if(os.path.exists(destination_fname)):
+# -- (HUM) REVIEWED;pending_rm -- 		last_update_time_logged = datetime.fromtimestamp(os.path.getmtime(destination_fname))
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	# -- check if the data is newer than last export
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	updated = False
+# -- (HUM) REVIEWED;pending_rm -- 	if(max_last_mod_time and last_update_time_logged):
+# -- (HUM) REVIEWED;pending_rm -- 		if(max_last_mod_time > last_update_time_logged):
+# -- (HUM) REVIEWED;pending_rm -- 			updated = True
+# -- (HUM) REVIEWED;pending_rm -- 	elif(max_last_mod_time and not last_update_time_logged):
+# -- (HUM) REVIEWED;pending_rm -- 		updated = True
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	# -- update only when the file is newer
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	if(updated):
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: to_csv called directly, bypassing oms_db abstraction.
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: wrap the write, passing full_path=destination_fname and df0=combined_df.
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: This keeps all CSV I/O inside the oms_db layer.
+# -- (HUM) REVIEWED;pending_rm -- 		combined_df.to_csv(destination_fname,index=False,float_format="%0.0f")
+# -- (HUM) REVIEWED;pending_rm -- 	return { "dest" : destination_fname, "file_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
-def __merged_csv_files_save_gspread_impl__(*, workbook, merge_res=None):
-	max_last_mod_time = merge_res['max_last_mod_time']
-	combined_df = merge_res['df']
-	fname = merge_res['fname']
-	last_update_time_logged = get_gsheet_last_update_time(workbook,fname)
-	# --
-	# -- check if the data is newer than last export
-	# --
-	updated = False
-	if(max_last_mod_time and last_update_time_logged):
-		if max_last_mod_time > last_update_time_logged:
-			updated = True
-	elif(max_last_mod_time and not last_update_time_logged):
-		updated = True
-	# --
-	# -- update only when the file is newer
-	# --
-	if(updated):
-		sheet = gsu.get_or_create_worksheet(workbook,fname,create_if_missing=True,clear_ws=True)
-		write_values=[combined_df.columns.values.tolist()] + combined_df.values.tolist()
-		range_LR = gsu.to_a1( np.asarray(write_values).shape )
-		sheet.update(range_name=f"A1:{range_LR}",values=write_values,value_input_option="USER_ENTERED")
-		# --
-		# -- Update the "maint" worksheet
-		# --
-		last_update_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-		update_maint_sheet(workbook, fname, last_update_time, max_last_mod_time.isoformat())
-		gsu.move_worksheet_to_second_position(workbook, fname)
-	# --
-	return { "gspread_updated" : updated, "file_last_update_time" : last_update_time_logged }
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) *** NO *** external ref
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) local ref
+# -- (HUM) REVIEWED;pending_rm -- def __merged_csv_files_save_gspread_impl__(*, workbook, merge_res=None):
+# -- (HUM) REVIEWED;pending_rm -- 	max_last_mod_time = merge_res['max_last_mod_time']
+# -- (HUM) REVIEWED;pending_rm -- 	combined_df = merge_res['df']
+# -- (HUM) REVIEWED;pending_rm -- 	fname = merge_res['fname']
+# -- (HUM) REVIEWED;pending_rm -- 	last_update_time_logged = get_gsheet_last_update_time(workbook,fname)
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	# -- check if the data is newer than last export
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	updated = False
+# -- (HUM) REVIEWED;pending_rm -- 	if(max_last_mod_time and last_update_time_logged):
+# -- (HUM) REVIEWED;pending_rm -- 		if max_last_mod_time > last_update_time_logged:
+# -- (HUM) REVIEWED;pending_rm -- 			updated = True
+# -- (HUM) REVIEWED;pending_rm -- 	elif(max_last_mod_time and not last_update_time_logged):
+# -- (HUM) REVIEWED;pending_rm -- 		updated = True
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	# -- update only when the file is newer
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	if(updated):
+# -- (HUM) REVIEWED;pending_rm -- 		sheet = gsu.get_or_create_worksheet(workbook,fname,create_if_missing=True,clear_ws=True)
+# -- (HUM) REVIEWED;pending_rm -- 		write_values=[combined_df.columns.values.tolist()] + combined_df.values.tolist()
+# -- (HUM) REVIEWED;pending_rm -- 		range_LR = gsu.to_a1( np.asarray(write_values).shape )
+# -- (HUM) REVIEWED;pending_rm -- 		sheet.update(range_name=f"A1:{range_LR}",values=write_values,value_input_option="USER_ENTERED")
+# -- (HUM) REVIEWED;pending_rm -- 		# --
+# -- (HUM) REVIEWED;pending_rm -- 		# -- Update the "maint" worksheet
+# -- (HUM) REVIEWED;pending_rm -- 		# --
+# -- (HUM) REVIEWED;pending_rm -- 		last_update_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+# -- (HUM) REVIEWED;pending_rm -- 		update_maint_sheet(workbook, fname, last_update_time, max_last_mod_time.isoformat())
+# -- (HUM) REVIEWED;pending_rm -- 		gsu.move_worksheet_to_second_position(workbook, fname)
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	return { "gspread_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
-def merged_csv_files_save_gspread(*, workbook=None, merge_res=None):
-	return retry(
-		lambda : __merged_csv_files_save_gspread_impl__(workbook=workbook,merge_res=merge_res),
-		retry=5, exceptTypes=(BaseException,Exception),cooldown=90,rtnEx=False,silent=False
-	)
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) ***NO*** external ref
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) local ref
+# -- (HUM) REVIEWED;pending_rm -- def merged_csv_files_save_gspread(*, workbook=None, merge_res=None):
+# -- (HUM) REVIEWED;pending_rm -- 	return retry(
+# -- (HUM) REVIEWED;pending_rm -- 		lambda : __merged_csv_files_save_gspread_impl__(workbook=workbook,merge_res=merge_res),
+# -- (HUM) REVIEWED;pending_rm -- 		retry=5, exceptTypes=(BaseException,Exception),cooldown=90,rtnEx=False,silent=False
+# -- (HUM) REVIEWED;pending_rm -- 	)
 
-def merge_csv_files_save(*, directories, fname, workbook=None, outdir=None, return_result=False, silent=False):
-	result = { 'merge_res':None, 'export_res':None, 'save_db_res':None }
-	# --
-	result['merge_res'] = merge_csv_files_as_df(directories=directories, fname=fname)
-	merge_res = result['merge_res']
-	if(workbook is not None):
-		result['export_res'] = merged_csv_files_save_gspread(workbook=workbook, merge_res=merge_res)
-	if(outdir is not None):
-		result['save_db_res'] = merged_csv_files_save_db(destination=outdir, merge_res=merge_res)
-	if(not silent):
-		print("merge :", result['merge_res']['fname'], result['merge_res']['max_last_mod_time'])
-		print("export :", result['export_res'])
-		print("save_db :", result['save_db_res'])
-	if(return_result):
-		return result
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) ***NO*** external ref
+# -- (HUM) REVIEWED;pending_rm -- # (HUM) ***NO*** local ref
+# -- (HUM) REVIEWED;pending_rm -- def merge_csv_files_save(*, directories, fname, workbook=None, outdir=None, return_result=False, silent=False):
+# -- (HUM) REVIEWED;pending_rm -- 	result = { 'merge_res':None, 'export_res':None, 'save_db_res':None }
+# -- (HUM) REVIEWED;pending_rm -- 	# --
+# -- (HUM) REVIEWED;pending_rm -- 	result['merge_res'] = merge_csv_files_as_df(directories=directories, fname=fname)
+# -- (HUM) REVIEWED;pending_rm -- 	merge_res = result['merge_res']
+# -- (HUM) REVIEWED;pending_rm -- 	if(workbook is not None):
+# -- (HUM) REVIEWED;pending_rm -- 		result['export_res'] = merged_csv_files_save_gspread(workbook=workbook, merge_res=merge_res)
+# -- (HUM) REVIEWED;pending_rm -- 	if(outdir is not None):
+# -- (HUM) REVIEWED;pending_rm -- 		result['save_db_res'] = merged_csv_files_save_db(destination=outdir, merge_res=merge_res)
+# -- (HUM) REVIEWED;pending_rm -- 	if(not silent):
+# -- (HUM) REVIEWED;pending_rm -- 		print("merge :", result['merge_res']['fname'], result['merge_res']['max_last_mod_time'])
+# -- (HUM) REVIEWED;pending_rm -- 		print("export :", result['export_res'])
+# -- (HUM) REVIEWED;pending_rm -- 		print("save_db :", result['save_db_res'])
+# -- (HUM) REVIEWED;pending_rm -- 	if(return_result):
+# -- (HUM) REVIEWED;pending_rm -- 		return result
 
 # -- ----------------------------------------------------
 # -- no_chk ---------------------------------------------
 # -- ----------------------------------------------------
+# (HUM) TODO: if timestamp check is added back in the future:
+# (HUM) TODO:   - rely on local OS filesystem mtime as the source of truth (not gsheet maint tab)
+# (HUM) TODO:   - write to file first; gsheet update is secondary and only triggered if file write happened
+# (HUM) TODO:   - gsheet timestamp should reflect file save time, not gsheet update time
+# (HUM) TODO:   - this avoids maint-tab drift and keeps a single consistent timeline
+# -- ----------------------------------------------------
+# (HUM) indirect external ref
+# (HUM) local ref
+# (HUM) destination is either "_export_/portf" and "_export_/accounts"
+# (HUM) directory "_export_" is not part of the database, it is just 
+# (HUM) a folder for storing temporary reports
+# (HUM) however, I should be more restrictive on destination , lock it 
+# (HUM) down to make sure it is not being abused
+# (HUM) TODO: in the future, I should hardcode the _export_ destination (?? good idea ??)
 def merged_csv_files_save_db_no_chk(*, destination, merge_res=None):
+	# --
+	# -- destination must contain _export_
+	# --
+	if('_export_' not in destination):
+		raise ValueError(f"only allow to write to _export_: destination={destination}")
 	combined_df = merge_res['df']
 	fname = merge_res['fname']
 	destination_fname = f'{destination}/{fname}'
@@ -600,12 +632,14 @@ def merged_csv_files_save_db_no_chk(*, destination, merge_res=None):
 	# -- update only when the file is newer
 	# --
 	if(updated):
-		# (CLU) NEED_REVIEW: to_csv called directly, bypassing oms_db abstraction.
-		# (CLU) NEED_REVIEW: Fix: same as merged_csv_files_save_db above — use DataFile to wrap
-		# (CLU) NEED_REVIEW: the write. Both functions share the same pattern and could be unified.
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: to_csv called directly, bypassing oms_db abstraction.
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: Fix: same as merged_csv_files_save_db above — use DataFile to wrap
+# -- (HUM) REVIEWED;pending_rm -- 		# (CLU) NEED_REVIEW: the write. Both functions share the same pattern and could be unified.
 		combined_df.to_csv(destination_fname,index=False,float_format="%0.0f")
 	return { "dest" : destination_fname, "file_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
+# (HUM) indirect external ref
+# (HUM) local ref
 def __merged_csv_files_save_gspread_impl___no_chk(*, workbook, merge_res=None):
 	combined_df = merge_res['df']
 	fname = merge_res['fname']
@@ -630,12 +664,15 @@ def __merged_csv_files_save_gspread_impl___no_chk(*, workbook, merge_res=None):
 	# --
 	return { "gspread_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
+# (HUM) indirect external ref
+# (HUM) local ref
 def merged_csv_files_save_gspread_no_chk(*, workbook=None, merge_res=None):
 	return retry(
 		lambda : __merged_csv_files_save_gspread_impl___no_chk(workbook=workbook,merge_res=merge_res),
 		retry=5, exceptTypes=(BaseException,Exception),cooldown=90,rtnEx=False,silent=False
 	)
 
+# (HUM) external ref: quick_func/export_csv_to_gspread.py
 def merge_csv_files_save_no_chk(*, directories, fname, workbook=None, outdir=None, return_result=False, silent=False):
 	result = { 'merge_res':None, 'export_res':None, 'save_db_res':None }
 	# --
