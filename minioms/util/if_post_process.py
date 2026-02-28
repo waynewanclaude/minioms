@@ -1,16 +1,6 @@
 from .op_exec_match import op_exec_match
 from .op_alloc_exec import op_alloc_exec
-
-def _print_obj(obj):
-	if(isinstance(obj, dict)):
-		for key, val in obj.items():
-			print(f"[{key}] {val.full_path}")
-			print(val.df.to_string())
-			print()
-	else:
-		print(obj.full_path)
-		print(obj.df.to_string())
-		print()
+from .helper_debug import print_obj
 
 def post_process_account(db_dir,account,auto_commit=True):
 	# --
@@ -22,7 +12,7 @@ def post_process_account(db_dir,account,auto_commit=True):
 		op_exec_match.validate(matching_results)
 	except Exception:
 		for obj in objects_for_match:
-			_print_obj(obj)
+			print_obj(obj)
 		raise
 	if(auto_commit):
 		op_exec_match.commit_result(matching_results)
@@ -36,7 +26,7 @@ def post_process_account(db_dir,account,auto_commit=True):
 		op_alloc_exec.validate(alloc_results)
 	except Exception:
 		for obj in objects_for_post:
-			_print_obj(obj)
+			print_obj(obj)
 		raise
 	if(auto_commit):
 		op_alloc_exec.commit_result(alloc_results)
