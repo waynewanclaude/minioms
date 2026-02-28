@@ -474,7 +474,11 @@ def merge_csv_files_as_df(*, directories, fname):
 					max_last_mod_time = max(last_mod_time,max_last_mod_time)
 					subdir_name = os.path.basename(subdir)
 					dir_name = os.path.basename(directory)
-					file_df = pd.read_csv(file_path)
+					# (CLU) NEED_REVIEW: pd.read_csv called directly, bypassing oms_db abstraction.
+				# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
+				# (CLU) NEED_REVIEW: wrap the read, passing full_path=file_path. This keeps all
+				# (CLU) NEED_REVIEW: CSV I/O inside the oms_db layer.
+				file_df = pd.read_csv(file_path)
 					file_df.insert(0, 'Subdirectory', subdir_name)
 					file_df.insert(0, 'Directory', dir_name)
 					if(len(file_df)>0):
@@ -517,6 +521,10 @@ def merged_csv_files_save_db(*, destination, merge_res=None):
 	# -- update only when the file is newer
 	# --
 	if(updated):
+		# (CLU) NEED_REVIEW: to_csv called directly, bypassing oms_db abstraction.
+		# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
+		# (CLU) NEED_REVIEW: wrap the write, passing full_path=destination_fname and df0=combined_df.
+		# (CLU) NEED_REVIEW: This keeps all CSV I/O inside the oms_db layer.
 		combined_df.to_csv(destination_fname,index=False,float_format="%0.0f")
 	return { "dest" : destination_fname, "file_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
@@ -592,6 +600,9 @@ def merged_csv_files_save_db_no_chk(*, destination, merge_res=None):
 	# -- update only when the file is newer
 	# --
 	if(updated):
+		# (CLU) NEED_REVIEW: to_csv called directly, bypassing oms_db abstraction.
+		# (CLU) NEED_REVIEW: Fix: same as merged_csv_files_save_db above — use DataFile to wrap
+		# (CLU) NEED_REVIEW: the write. Both functions share the same pattern and could be unified.
 		combined_df.to_csv(destination_fname,index=False,float_format="%0.0f")
 	return { "dest" : destination_fname, "file_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
