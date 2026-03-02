@@ -473,15 +473,15 @@ def merge_csv_files_as_df(*, directories, fname):
 					max_last_mod_time = max(last_mod_time,max_last_mod_time)
 					subdir_name = os.path.basename(subdir)
 					dir_name = os.path.basename(directory)
-# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: pd.read_csv called directly, bypassing oms_db abstraction.
-# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
-# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: wrap the read, passing full_path=file_path. This keeps all
-# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: CSV I/O inside the oms_db layer.
-				# (HUM) in this case, I am export the files as csv (concate them and write to 
-				# (HUM) google spreadsheet) In a way, I am not treating them as data, but raw
-				# (HUM) files. Let me know if this is a strong enough reason to by pass the 
-				# (HUM) object I/O interface.
-				file_df = pd.read_csv(file_path)
+					# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: pd.read_csv called directly, bypassing oms_db abstraction.
+					# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: Fix: use oms_db.datafile.DataFile (or a thin subclass) to
+					# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: wrap the read, passing full_path=file_path. This keeps all
+					# -- (HUM) REVIEWED;pending_rm -- 				# (CLU) NEED_REVIEW: CSV I/O inside the oms_db layer.
+					# (HUM) in this case, I am export the files as csv (concate them and write to 
+					# (HUM) google spreadsheet) In a way, I am not treating them as data, but raw
+					# (HUM) files. Let me know if this is a strong enough reason to by pass the 
+					# (HUM) object I/O interface.
+					file_df = pd.read_csv(file_path)
 					file_df.insert(0, 'Subdirectory', subdir_name)
 					file_df.insert(0, 'Directory', dir_name)
 					if(len(file_df)>0):
