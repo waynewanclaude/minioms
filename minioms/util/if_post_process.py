@@ -33,24 +33,29 @@ def post_process_account(db_dir,account,auto_commit=True):
 		
 	return matching_results, alloc_results
 
-# -- (HUM) REVIEWED;pending_rm -- def display_results(results):
-# -- (HUM) REVIEWED;pending_rm -- 	matching_results, alloc_results = results
-# -- (HUM) REVIEWED;pending_rm -- 	print("#"*120)
-# -- (HUM) REVIEWED;pending_rm -- 	print("# matching")
-# -- (HUM) REVIEWED;pending_rm -- 	display(matching_results[2].df)
-# -- (HUM) REVIEWED;pending_rm -- 	print("#"*120)
-# -- (HUM) REVIEWED;pending_rm -- 	print("# allocations")
-# -- (HUM) REVIEWED;pending_rm -- 	display(matching_results[3].df)
-# -- (HUM) REVIEWED;pending_rm -- 	print("#"*120)
-# -- (HUM) REVIEWED;pending_rm -- 	# --
-# -- (HUM) REVIEWED;pending_rm -- 	print("#"*120)
-# -- (HUM) REVIEWED;pending_rm -- 	for strat_portf,alloc_result in alloc_results.items():
-# -- (HUM) REVIEWED;pending_rm -- 		print("#"*120)
-# -- (HUM) REVIEWED;pending_rm -- 		print(strat_portf)
-# -- (HUM) REVIEWED;pending_rm -- 		print("*"*120)
-# -- (HUM) REVIEWED;pending_rm -- 		print("**** error ****", alloc_result[2])
-# -- (HUM) REVIEWED;pending_rm -- 		print("*"*120)
-# -- (HUM) REVIEWED;pending_rm -- 		print("paired_txns [tail]")
-# -- (HUM) REVIEWED;pending_rm -- 		display(alloc_result[1].df.tail())
-# -- (HUM) REVIEWED;pending_rm -- 		print("open_pos [tail]")
-# -- (HUM) REVIEWED;pending_rm -- 		display(alloc_result[0].df.tail())
+# --
+# -- is_API: True
+# -- used by "_08_pm_post_processing"
+# -- this is for jupyter notebook only
+# --
+def display_results(results):
+	matching_results, alloc_results = results
+	print("#"*120)
+	print("# matching")
+	display(matching_results[2].df)
+	print("#"*120)
+	print("# allocations")
+	display(matching_results[3].df)
+	print("#"*120)
+	# --
+	print("#"*120)
+	for strat_portf,alloc_result in alloc_results.items():
+		print("#"*120)
+		print(strat_portf)
+		print("*"*120)
+		print("**** error ****", alloc_result[2])
+		print("*"*120)
+		print("paired_txns [tail]")
+		display(alloc_result[1].df.tail())
+		print("open_pos [tail]")
+		display(alloc_result[0].df.tail())
