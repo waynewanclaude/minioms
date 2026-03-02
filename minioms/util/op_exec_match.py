@@ -24,15 +24,8 @@ class op_exec_match:
 		matched,unmatch,matching = account_orders_and_executions_match(acct_orders.df.copy(),executions_df)
 		# --
 		executions_df = executions_br.prepare_executions_for_alloc(executions.df.copy())
-		# (CLU) NEED_REVIEW: daily_orders.df passed without .copy(), inconsistent with lines above
-		# (CLU) NEED_REVIEW: where .copy() is used explicitly. pd.merge does not mutate in place
-		# (CLU) NEED_REVIEW: so it is safe here, but Fix: add .copy() for consistency.
 		allocations = allocate_daily_orders(daily_orders.df,executions_df)
 		# --
-		# (CLU) NEED_REVIEW: .db_dir and .account are set in the subclass __init__ but are not
-		# (CLU) NEED_REVIEW: part of the DataFile base class interface, making this fragile.
-		# (CLU) NEED_REVIEW: Fix: either promote db_dir and account to DataFile base class
-		# (CLU) NEED_REVIEW: attributes, or pass them explicitly as parameters to exec_match.
 		db_dir = executions.db_dir
 		account = executions.account
 		return (
@@ -62,20 +55,15 @@ def account_orders_and_executions_match(orders,executions):
 	if(len(orders)==0):
 		return (None,None,None)
 	# --
-	# (CLU) NEED_REVIEW: column names are reassigned in place, assuming exact column count and
-	# (CLU) NEED_REVIEW: order from upstream. If the column spec of AccountOrders or Executions
-	# (CLU) NEED_REVIEW: changes, this breaks silently with wrong data rather than an error.
-	# (CLU) NEED_REVIEW: Fix: use df.rename(columns={...}) with explicit old->new mapping so
-	# (CLU) NEED_REVIEW: mismatches raise a visible error instead of silently corrupting data.
-	orders.columns = ['symbol','order_unit']
-	executions.columns = ['date','symbol','exec_unit','price','amount','pkey']
+	orders = orders.rename(columns={'unit':'order_unit'},errors='raise')
+	executions = executions.rename(columns={'unit':'exec_unit'},errors='raise')
 	# --
 	matching = pd.merge(orders, executions, on='symbol', how='outer')
 	matching.loc[:,'status'] = 'diff-qty'
 	matching.loc[matching['order_unit'].isnull(),'status'] = 'exec-wo-order'
 	matching.loc[matching['exec_unit'].isnull(),'status'] = 'missing-exec'
 	matching.loc[matching['exec_unit']==matching['order_unit'],'status'] = 'matched'
-	matching.columns = ['symbol','ord_qty','date','exec_qty','exec_price','ttl_cost','exec_pkey','match']
+	matching = matching.rename(columns={'order_unit':'ord_qty','exec_unit':'exec_qty','price':'exec_price','amount':'ttl_cost','pkey':'exec_pkey','status':'match'},errors='raise')
 	matching = matching[ ['date','symbol','ord_qty','exec_qty','exec_price','ttl_cost','match','exec_pkey'] ]
 	# --
 	matched = matching[matching['match']=='matched']
