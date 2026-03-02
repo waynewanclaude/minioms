@@ -457,8 +457,6 @@ def convert_columns_to_string(df):
 			df[col] = df[col].fillna('').replace({'nan': '', 'NaN': ''})
 	return df
 
-# (HUM) indirect external ref
-# (HUM) local ref
 def merge_csv_files_as_df(*, directories, fname):
 	all_data = []
 	max_last_mod_time = None
@@ -602,15 +600,6 @@ def merge_csv_files_as_df(*, directories, fname):
 # (HUM) TODO:   - write to file first; gsheet update is secondary and only triggered if file write happened
 # (HUM) TODO:   - gsheet timestamp should reflect file save time, not gsheet update time
 # (HUM) TODO:   - this avoids maint-tab drift and keeps a single consistent timeline
-# -- ----------------------------------------------------
-# (HUM) indirect external ref
-# (HUM) local ref
-# (HUM) destination is either "_export_/portf" and "_export_/accounts"
-# (HUM) directory "_export_" is not part of the database, it is just 
-# (HUM) a folder for storing temporary reports
-# (HUM) however, I should be more restrictive on destination , lock it 
-# (HUM) down to make sure it is not being abused
-# (HUM) TODO: in the future, I should hardcode the _export_ destination (?? good idea ??)
 def merged_csv_files_save_db_no_chk(*, destination, merge_res=None):
 	# --
 	# -- destination must contain _export_
@@ -638,8 +627,6 @@ def merged_csv_files_save_db_no_chk(*, destination, merge_res=None):
 		combined_df.to_csv(destination_fname,index=False,float_format="%0.0f")
 	return { "dest" : destination_fname, "file_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
-# (HUM) indirect external ref
-# (HUM) local ref
 def __merged_csv_files_save_gspread_impl___no_chk(*, workbook, merge_res=None):
 	combined_df = merge_res['df']
 	fname = merge_res['fname']
@@ -664,15 +651,15 @@ def __merged_csv_files_save_gspread_impl___no_chk(*, workbook, merge_res=None):
 	# --
 	return { "gspread_updated" : updated, "file_last_update_time" : last_update_time_logged }
 
-# (HUM) indirect external ref
-# (HUM) local ref
 def merged_csv_files_save_gspread_no_chk(*, workbook=None, merge_res=None):
 	return retry(
 		lambda : __merged_csv_files_save_gspread_impl___no_chk(workbook=workbook,merge_res=merge_res),
 		retry=5, exceptTypes=(BaseException,Exception),cooldown=90,rtnEx=False,silent=False
 	)
 
-# (HUM) external ref: quick_func/export_csv_to_gspread.py
+# -- 
+# -- is_API: TRUE
+# -- 
 def merge_csv_files_save_no_chk(*, directories, fname, workbook=None, outdir=None, return_result=False, silent=False):
 	result = { 'merge_res':None, 'export_res':None, 'save_db_res':None }
 	# --
