@@ -37,6 +37,8 @@ class op_alloc_exec:
 		return impl__post_process_account(allocations,portfs_ptxns)
 
 	def validate(alloc_results,raise_on_err=True):
+		# (CLU) NEED_REVIEW: stub — always returns True, no validation logic implemented.
+		# (CLU) NEED_REVIEW: Consider checking alloc_results for error entries (alloc_result[2]) across all portfolios.
 		return True
 
 	def commit_result(alloc_results):
@@ -85,6 +87,7 @@ def post_allocation_to_portf(allocations,paired_txn):
 	# -- format allocation to match paired_txn
 	# --
 	allocations.loc[:,'linked_sell_txn'] = "--"
+	# (CLU) NEED_REVIEW: rename without errors='raise' — silent no-op if column names change. Add errors='raise' for safety (see op_exec_match.py).
 	allocations.rename(inplace=True,columns={
 		'action':'type',
 		'exec_price':'entry price'
@@ -107,17 +110,20 @@ def post_allocation_to_portf(allocations,paired_txn):
 	# --
 	# ?? side_by_side = pd.merge(paired_txn,fmt_alloc,how="outer",on="pkey",suffixes=['','_fmt_alloc'])
 	# ?? display(side_by_side.tail())
+	# (CLU) NEED_REVIEW: dead debug code above (# ?? prefix), safe to remove.
 	paired_txn = pd.concat([paired_txn,fmt_alloc],axis=0)
 	is_valid,error = paired_txn_validation(paired_txn)
 	if(not is_valid):
 		return (None, paired_txn, error)
 	else:
 		# -- write_paired_txn(db_folder=db_folder,strategy=book,book_name=portfolio,paired_txn=paired_txn)
+		# (CLU) NEED_REVIEW: old-style direct write call, superseded by IO object approach. Safe to remove.
 		# --
 		# -- write open pos based on the combined paired_txn list
 		# --
 		open_pos = extract_openpos(paired_txn)
 		# -- write_open_pos(db_folder=db_folder,strategy=book,book_name=portfolio,open_pos=open_pos)
+		# (CLU) NEED_REVIEW: old-style direct write call, superseded by IO object approach. Safe to remove.
 		# --
 		# -- 
 		# --
@@ -131,6 +137,8 @@ def replace_portf_alloc_pkey(alloc):
 		rr['action'],
 		f"{abs(rr['unit'])}"
 	]),axis=1)
+	# (CLU) NEED_REVIEW: rename without errors='raise' (line below) — silent no-op if column names change. Add errors='raise' for safety.
+	# (CLU) NEED_REVIEW: how='outer' could silently introduce NaN rows if alloc and working have mismatched keys. Consider how='left' if all alloc rows should always match.
 	working = pd.merge(alloc,working,how='outer',on=['date','symbol','action'],suffixes=['','_working'])
 	working.rename(inplace=True,columns={
 		'pkey':'ord_pkey',
@@ -139,9 +147,12 @@ def replace_portf_alloc_pkey(alloc):
 	return working
 
 def paired_txn_validation(txn):
+	# (CLU) NEED_REVIEW: stub — always returns True,{}. No validation logic implemented.
+	# (CLU) NEED_REVIEW: Consider checking for duplicate pkeys, mismatched buy/sell pairs, or negative units.
 	return True,{}
 
 def extract_openpos(paired_txn):
+	# (CLU) NEED_REVIEW: np.logical_and can be replaced with & operator: paired_txn[(paired_txn["type"]=="BUY") & (paired_txn["linked_sell_txn"]=="--")]
 	open_pos = paired_txn[np.logical_and(paired_txn["type"]=="BUY",paired_txn["linked_sell_txn"]=="--")]
 	open_pos = open_pos.drop(columns=["linked_sell_txn"])
 	return open_pos

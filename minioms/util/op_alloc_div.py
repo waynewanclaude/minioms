@@ -45,6 +45,8 @@ class op_alloc_div:
 		# !!
 		# !! alloc_div_by_portfupdated acctdiv, and need to be stored !!
 		# !!
+		# (CLU) NEED_REVIEW: alloc_div_by_portf mutates acctdiv.df in-place (status field). This is an implicit side-effect.
+		# (CLU) NEED_REVIEW: If merge() is called multiple times or fails midway, acctdiv state may be inconsistent.
 		# --
 		# -- merge alloc to portofolios' div txns table
 		# --
@@ -59,8 +61,10 @@ class op_alloc_div:
 
 	# --
 	# -- TODO: fix this
-	# !! write is not atomic, so if something failed here, 
+	# !! write is not atomic, so if something failed here,
 	# !! it will need a lot of manual fixes on data file
+	# (CLU) NEED_REVIEW: non-atomic writes — acctdiv.write() and each merged.write() are independent.
+	# (CLU) NEED_REVIEW: Partial failure leaves files in inconsistent state. Consider writing to temp files and renaming atomically, or at minimum write acctdiv last.
 	# --
 	def commit_result(merge_results, auto_commit=True):
 		op_alloc_div.validate(merge_results,raise_on_err=True)
@@ -179,6 +183,7 @@ def merge_div_by_legacy_key_side_by_side(portfs_dtxns,dollar_div_alloc):
 #D		print(p_dtxns)
 #D		print(p_dtxns.df)
 #D		print("#"*80)
+		# (CLU) NEED_REVIEW: dead debug code above (#D prefix), safe to remove.
 		d_alloc = dollar_div_alloc[strat_portf]
 		errors,merged,side_by_side = merge_div_by_legacy_key_side_by_side_1_v2(p_dtxns, d_alloc)
 		if(merged is not None):
@@ -190,9 +195,11 @@ def merge_div_by_legacy_key_side_by_side_1_v2(old_div,new_div):
 	from_file = portfdiv_io.upgrade_v0(old_div.df.copy())
 	pf_div_txn = new_div.copy()
 	# --
+	# (CLU) NEED_REVIEW: double copy — new_div.copy() on line above, then pf_div_txn.copy() here. One of them is redundant.
 	pf_div_txn = pf_div_txn.copy()
 	pf_div_txn['legacy_key'] = pf_div_txn[["type","pay_date","symbol"]].astype(str).agg("|".join,axis=1)
 	# --
+	# (CLU) NEED_REVIEW: how='outer' could silently introduce NaN rows if legacy_key mismatches. Consider whether 'left' is safer here.
 	side_by_side = pd.merge(pf_div_txn,from_file,how='outer',on='legacy_key', suffixes=['_new','_file'])
 	side_by_side = side_by_side.sort_values(["legacy_key"])
 	side_by_side = side_by_side.reset_index(drop=True)
@@ -221,11 +228,11 @@ def div_alloc_validate_merge_plan(old_div,side_by_side):
 			'evidence' : keys,
 		})
 	# --
-	# all_file_dtxns = side_by_side[ side_by_side['type_file'] !="" ]
+	# all_file_dtxns = side_by_side[ side_by_side['type_file'] !="" ]  # (CLU) NEED_REVIEW: commented-out code, safe to remove.
 	last_pay_date_on_file = side_by_side['pay_date_file'].max()
 	cond2 = (side_by_side['type_new'] !="") * (side_by_side['pay_date_new'] < last_pay_date_on_file) * (side_by_side['type_file']=="")
-	# print(last_pay_date_on_file)
-	# print(cond2)
+	# print(last_pay_date_on_file)  # (CLU) NEED_REVIEW: dead debug print, safe to remove.
+	# print(cond2)                  # (CLU) NEED_REVIEW: dead debug print, safe to remove.
 	if(cond2.any()):
 		keys = ','.join( side_by_side[cond2]['dtxn_pkey_new'].tolist() )
 		errors.append({
