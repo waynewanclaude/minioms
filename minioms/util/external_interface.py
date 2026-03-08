@@ -26,6 +26,9 @@ def load_market_price_impl(req_symbols,cached_data={}):
 	result = [ cached_data[sym] for sym in set(req_symbols) ]
 	return result
 
+# !!
+# !! somepos will get modified
+# !!
 def load_market_price(somepos,cache={},clear_cache=False):
 	if(clear_cache):
 		cache.clear()

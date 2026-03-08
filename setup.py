@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='minioms',
-version='0.1.0.dev69+clu',
+version='0.1.0.dev70+clu',
 description='mini OMS',
 url='#',
 author='#',

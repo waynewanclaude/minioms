@@ -6,6 +6,7 @@ from ..obj.PairedTxns import io_utility as pairedtxns_io
 from ..obj.PortfSetting import io_utility as portfset_io
 from ..obj.PortfSetting import br_utility as portfset_br
 from ..obj.PortfDailyOrders import io_utility as portfdord_u_io
+from ..oms_db.classes_io import PortfDailyOrders_IO
 from jackutil.microfunc import types_validate
 from jackutil.microfunc import dt_to_str
 from .external_interface import load_market_price
@@ -50,7 +51,14 @@ def generate_orders_for_book(*,db_folder,book,version=None):
 	if(version is not None):
 		check_version(book.version, version)
 	# --
-	pre_fetch_market_price(db_folder=db_folder,book=book)
+	# -- pre-load all portfolio data once to avoid duplicate I/O with pre_fetch_market_price
+	# --
+	all_portf_data = {}
+	for portf in book.portfolios:
+		wb_name = portf['wb_name']
+		sh_name = portf['sh_name']
+		all_portf_data[(wb_name,sh_name)] = load_portf_data(db_folder=db_folder,strategy=wb_name,book_name=sh_name)
+	pre_fetch_market_price(all_portf_data=all_portf_data)
 	# --
 	portf_orders = {}
 	for portf in book.portfolios:
@@ -59,12 +67,13 @@ def generate_orders_for_book(*,db_folder,book,version=None):
 		name = portf['name']
 		portf_attr = get_portf_attr(portf)
 		# --
-		portf_orders[name] = generate_orders_for_portf(db_folder=db_folder,strategy=wb_name,book_name=sh_name,portf_attr=portf_attr)
+		portf_orders[name] = generate_orders_for_portf(db_folder=db_folder,strategy=wb_name,book_name=sh_name,portf_attr=portf_attr,d_portf_data=all_portf_data[(wb_name,sh_name)])
 		print(f"{wb_name}/{sh_name} orders generated")
 	return portf_orders
 
-def generate_orders_for_portf(*,db_folder,strategy,book_name,portf_attr):
-	d_portf_data = load_portf_data(db_folder=db_folder,strategy=strategy,book_name=book_name)
+def generate_orders_for_portf(*,db_folder,strategy,book_name,portf_attr,d_portf_data=None):
+	if(d_portf_data is None):
+		d_portf_data = load_portf_data(db_folder=db_folder,strategy=strategy,book_name=book_name)
 	portf_settings = d_portf_data['portf_settings']
 	orders = build_orders_table(
 		portf_attr=portf_attr,
@@ -75,9 +84,7 @@ def generate_orders_for_portf(*,db_folder,strategy,book_name,portf_attr):
 	# --
 	daily_orders = orders["all_orders"]
 	# --
-	# (CLU) NEED_REVIEW: portfdord_u_io.save() called directly — bypasses the IO object pattern used elsewhere.
-	# (CLU) NEED_REVIEW: Fix: create PortfDailyOrders_IO and call .write() instead, consistent with other op_* files.
-	portfdord_u_io.save(db_dir=db_folder, strategy=strategy, portfolio=book_name, df0=daily_orders)
+	PortfDailyOrders_IO(db_dir=db_folder,strategy=strategy,portfolio=book_name,df0=daily_orders).write()
 	return orders
 
 def load_portf_data(*,db_folder,strategy,book_name):
@@ -94,21 +101,12 @@ def check_version(book_version,version):
 		raise Exception(f"book version is {book_version}; require version is {version} or above")
 	print(f"book version is {book_version}; require version is {version} or above")
 
-# (CLU) NEED_REVIEW: pre_fetch_market_price loads openpos/exitcond/buylist from disk here to collect symbols,
-# (CLU) NEED_REVIEW: then generate_orders_for_portf → load_portf_data loads the same files again per portfolio.
-# (CLU) NEED_REVIEW: Duplicate I/O — consider passing already-loaded data to avoid re-reading files.
-def pre_fetch_market_price(*,db_folder,book):
+def pre_fetch_market_price(*,all_portf_data):
 	symbols_list = set()
-	for portf in book.portfolios:
-		wb_name = portf['wb_name']
-		sh_name = portf['sh_name']
-		# --
-		openpos = load_openpos(db_folder=db_folder,strategy=wb_name,book_name=sh_name)
-		exitcond = load_exitcond(db_folder=db_folder,strategy=wb_name,book_name=sh_name)
-		buylist = load_buylist(db_folder=db_folder,strategy=wb_name,book_name=sh_name)
-		symbols_list.update(openpos['symbol'].tolist())
-		symbols_list.update(exitcond['symbol'].tolist())
-		symbols_list.update(buylist['symbol'].tolist())
+	for (wb_name,sh_name),portf_data in all_portf_data.items():
+		symbols_list.update(portf_data['openpos']['symbol'].tolist())
+		symbols_list.update(portf_data['exitcond']['symbol'].tolist())
+		symbols_list.update(portf_data['buylist']['symbol'].tolist())
 	output = load_market_price(pd.DataFrame(data=symbols_list,columns=["symbol"]))
 	pprint(output)
 
@@ -165,8 +163,10 @@ def build_orders_table(*,portf_attr,portf_basic_info,portf_summary,exitcond,buyl
 	daily_orders['unit'] = daily_orders['unit'].astype(int)
 	if(daily_orders.shape[0]>0):
 		fd_pkey = daily_orders[["date","action","unit","symbol"]]
-		# (CLU) NEED_REVIEW: fd_pkey is a slice of daily_orders — .loc[:,'unit'] assignment may trigger SettingWithCopyWarning.
-		# (CLU) NEED_REVIEW: Fix: use fd_pkey = fd_pkey.copy() before the assignment, or assign directly on daily_orders.
+		# --
+		# !! (HUM) this might trigger SettingWithCopyWarning, but refactor/rewrite will fix it eventually
+		# !! (HUM) take no action for now
+		# --
 		fd_pkey.loc[:,'unit'] = np.abs(fd_pkey['unit'])
 		daily_orders.loc[:,'pkey'] = fd_pkey[["date","symbol","action","unit"]].astype(str).agg("|".join,axis=1)
 	daily_orders = daily_orders["book,portfolio,date,symbol,action,unit,price,linked_buy_pkey,pkey".split(",")]
@@ -187,7 +187,9 @@ def portf_financial_summary(*,db_folder,strategy,book_name):
 	openpos = load_openpos(db_folder=db_folder, strategy=strategy,book_name=book_name)
 	dividend_txn = load_dividend(db_folder=db_folder, strategy=strategy,book_name=book_name)
 	if('price' not in openpos.columns):
-		# (CLU) NEED_REVIEW: pd.DataFrame(openpos) wraps an already-DataFrame openpos — redundant, load_market_price(openpos) is sufficient.
+		# !!
+		# !! load_market_price change pasted in obj
+		# !!
 		openpos = load_market_price(pd.DataFrame(openpos))
 	# --
 	total_cost = paired_txn['cost'].sum()
@@ -207,11 +209,6 @@ def load_openpos(*,db_folder,strategy,book_name):
 	return portfpos_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 
 def load_exitcond(*,db_folder,strategy,book_name,trig_only=True):
-	# --
-	# !! exit_cond_ext.csv generated by portfolio_daily_update_4_2t0.py
-	# !! should change to load exit_cond.csv in the final version
-	# (CLU) NEED_REVIEW: unresolved TODO — exitconds_io still loading a transitional file format. Confirm whether exit_cond_ext.csv or exit_cond.csv is the current standard.
-	# --
 	exitcond = exitconds_io.load(db_dir=db_folder,strategy=strategy,portfolio=book_name).df.copy()
 	exitcond['unit'] = exitcond['unit'].astype(int)
 	if(trig_only):
